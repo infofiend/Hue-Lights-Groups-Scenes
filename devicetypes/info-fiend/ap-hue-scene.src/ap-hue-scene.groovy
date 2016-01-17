@@ -14,6 +14,7 @@ metadata {
 
         attribute "sceneID", "string"
 
+		command "setScene"
     }
 
     // simulator metadata
@@ -50,5 +51,5 @@ def push () {
 def setScene ( Integer inGroupID ) {
 	def groupID = inGroupID ?: 0
     parent.setGroupScene(this, groupID, 3)
-    sendEvent(name: "momentary", value: "pushed", isStateChange: true)
+//    sendEvent(name: "momentary", value: "pushed", isStateChange: true)
 }
