@@ -449,14 +449,14 @@ def addBulbs() {
 			if (bulbs instanceof java.util.Map) {
 				newHueBulb = bulbs.find { (app.id + "/" + it.value.id) == dni }
 				if (newHueBulb?.value?.type?.equalsIgnoreCase("Dimmable light")) {
-					d = addChildDevice("zpriddy", "ZP Hue Lux Bulb", dni, newHueBulb?.value.hub, ["label":newHueBulb?.value.name])
+					d = addChildDevice("info_fiend", "AP Hue Lux Bulb", dni, newHueBulb?.value.hub, ["label":newHueBulb?.value.name])
 				} else {
-					d = addChildDevice("zpriddy", "ZP Hue Bulb", dni, newHueBulb?.value.hub, ["label":newHueBulb?.value.name])
+					d = addChildDevice("info_fiend", "AP Hue Bulb", dni, newHueBulb?.value.hub, ["label":newHueBulb?.value.name])
 				}
 			} else { 
             	//backwards compatable
 				newHueBulb = bulbs.find { (app.id + "/" + it.id) == dni }
-				d = addChildDevice("zpriddy", "ZP Hue Bulb", dni, newHueBulb?.hub, ["label":newHueBulb?.name])
+				d = addChildDevice("info_fiend", "AP Hue Bulb", dni, newHueBulb?.hub, ["label":newHueBulb?.name])
 			}
 
 			log.debug "created ${d.displayName} with id $dni"
@@ -466,7 +466,7 @@ def addBulbs() {
 			if (bulbs instanceof java.util.Map) {
             	def newHueBulb = bulbs.find { (app.id + "/" + it.value.id) == dni }
 				if (newHueBulb?.value?.type?.equalsIgnoreCase("Dimmable light") && d.typeName == "Hue Bulb") {
-					d.setDeviceType("ZP Hue Lux Bulb")
+					d.setDeviceType("AP Hue Lux Bulb")
 				}
 			}
 		}
@@ -507,7 +507,7 @@ def addScenes() {
 			if (scenes instanceof java.util.Map) 
 			{
 				newHueScene = scenes.find { (app.id + "/" + it.value.id + "s") == dni }
-				d = addChildDevice("zpriddy", "AP Hue Scene", dni, newHueScene?.value.hub, ["label":newHueScene?.value.name, "sceneID":newHueScene?.value.id])
+				d = addChildDevice("info_fiend", "AP Hue Scene", dni, newHueScene?.value.hub, ["label":newHueScene?.value.name, "sceneID":newHueScene?.value.id])
 			} 
 
 			log.debug "created ${d.displayName} with id $dni"
@@ -528,7 +528,7 @@ def addBridge() {
 	if(vbridge) {
 		def d = getChildDevice(selectedHue)
 		if(!d) {
-			d = addChildDevice("zpriddy", "ZP Hue Bridge", selectedHue, vbridge.value.hub, ["data":["mac": vbridge.value.mac]]) // ["preferences":["ip": vbridge.value.ip, "port":vbridge.value.port, "path":vbridge.value.ssdpPath, "term":vbridge.value.ssdpTerm]]
+			d = addChildDevice("info_fiend", "AP Hue Bridge", selectedHue, vbridge.value.hub, ["data":["mac": vbridge.value.mac]]) // ["preferences":["ip": vbridge.value.ip, "port":vbridge.value.port, "path":vbridge.value.ssdpPath, "term":vbridge.value.ssdpTerm]]
 
 			log.debug "created ${d.displayName} with id ${d.deviceNetworkId}"
 
@@ -817,31 +817,7 @@ def parse(childDevice, description) {
             for (bulb in body) {
                 def d = bulbs.find{it.deviceNetworkId == "${app.id}/${bulb.key}g"}    
                 if (d) {
-                	/*
-                	if(bulb.value.type != "LightGroup")
-                	{
-                		log.debug "Reading Poll for Non-LightGroups"
-	                    if (bulb.value.state.reachable) {
-	                            sendEvent(d.deviceNetworkId, [name: "switch", value: bulb.value?.state?.on ? "on" : "off"])
-	                            sendEvent(d.deviceNetworkId, [name: "level", value: Math.round(bulb.value.state.bri * 100 / 255)])
-	                            if (bulb.value.state.sat) {
-	                                def hue = Math.min(Math.round(bulb.value.state.hue * 100 / 65535), 65535) as int
-	                                def sat = Math.round(bulb.value.state.sat * 100 / 255) as int
-	                                def hex = colorUtil.hslToHex(hue, sat)
-	                                sendEvent(d.deviceNetworkId, [name: "color", value: hex])
-	                            }
-	                        } else {
-	                            sendEvent(d.deviceNetworkId, [name: "switch", value: "off"])
-	                            sendEvent(d.deviceNetworkId, [name: "level", value: 100])                     
-	                            if (bulb.value.state.sat) {
-	                                def hue = 23
-	                                def sat = 56
-	                                def hex = colorUtil.hslToHex(23, 56)
-	                                sendEvent(d.deviceNetworkId, [name: "color", value: hex])
-	                            }    
-	                     }
-	                 }
-	                 */
+                
 	                if(bulb.value.type == "LightGroup" || bulb.value.type == "Room")
                 	{
                 		
@@ -1112,7 +1088,7 @@ def getSceneID(childDevice) {
 			if (scenes instanceof java.util.Map) 
 			{
 				hueScene = scenes.find { (app.id + "/" + it.value.id + "s") == dni }
-				d = addChildDevice("zpriddy", "AP Hue Scene", dni, newHueScene?.value.hub, ["label":newHueScene?.value.name, "sceneID":newHueScene?.value.id])
+				d = addChildDevice("info_fiend", "AP Hue Scene", dni, newHueScene?.value.hub, ["label":newHueScene?.value.name, "sceneID":newHueScene?.value.id])
 			} 
 
 			log.debug "created ${d.displayName} with id $dni"
