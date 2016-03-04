@@ -1,6 +1,7 @@
 /**
  *  Hue Lights and Groups and Scenes (OH MY) - new Hue Service Manager
- *
+ *  v 1.1
+ 
  *  Author: Anthony Pastor
  *
  *  To-Do:
@@ -12,7 +13,7 @@ definition(
     name: "Hue Lights and Groups and Scenes (OH MY)",
     namespace: "info_fiend",
     author: "Anthony Pastor",
-	description: "Allows you to connect your Philips Hue lights with SmartThings and control them from your Things area or Dashboard in the SmartThings Mobile app. Adjust colors by going to the Thing detail screen for your Hue lights (tap the gear on Hue tiles).\n\nPlease update your Hue Bridge first, outside of the SmartThings app, using the Philips Hue app.",
+	description: "Connects your Philips Hue lights, groups and scenes.",
 	category: "SmartThings Labs",
 	iconUrl: "https://s3.amazonaws.com/smartapp-icons/Partner/hue.png",
 	iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Partner/hue@2x.png"
@@ -483,7 +484,7 @@ def addGroups() {
 			if (groups instanceof java.util.Map) 
 			{
 				newHueGroup = groups.find { (app.id + "/" + it.value.id + "g") == dni }
-				d = addChildDevice("zpriddy", "ZP Hue Group", dni, newHueGroup?.value.hub, ["label":newHueGroup?.value.name, "groupID":newHueGroup?.value.id])
+				d = addChildDevice("info_fiend", "AP Hue Group", dni, newHueGroup?.value.hub, ["label":newHueGroup?.value.name, "groupID":newHueGroup?.value.id])
 			} 
 
 			log.debug "created ${d.displayName} with id $dni"
@@ -916,7 +917,7 @@ def groupOn(childDevice, transitiontime, percent) {
 	def level = Math.min(Math.round(percent * 255 / 100), 255)
 	def value = [on: true, bri: level]
 	value.transitiontime = transitiontime * 10
-	log.debug "Executing 'on'"
+	log.debug "Executing 'groupOn'"
 	put("groups/${getId(childDevice)}/action", value)
 }
 
@@ -928,7 +929,7 @@ def off(childDevice, transitiontime) {
 }
 
 def groupOff(childDevice, transitiontime) {
-	log.debug "Executing 'off'"
+	log.debug "Executing 'groupOff'"
     def value = [on: false]
 	value.transitiontime = transitiontime * 10
 	put("groups/${getId(childDevice)}/action", value)
@@ -943,7 +944,7 @@ def setLevel(childDevice, percent, transitiontime) {
 }
 
 def setGroupLevel(childDevice, percent, transitiontime) {
-	log.debug "Executing 'setLevel'"
+	log.debug "Executing 'setGroupLevel'"
 	def level = Math.min(Math.round(percent * 255 / 100), 255)
 	def value = [bri: level, on: percent > 0, transitiontime: transitiontime * 10]
 	put("groups/${getId(childDevice)}/action", value)
@@ -956,7 +957,7 @@ def setSaturation(childDevice, percent, transitiontime) {
 }
 
 def setGroupSaturation(childDevice, percent, transitiontime) {
-	log.debug "Executing 'setSaturation($percent)'"
+	log.debug "Executing 'setGroupSaturation($percent)'"
 	def level = Math.min(Math.round(percent * 255 / 100), 255)
 	put("groups/${getId(childDevice)}/action", [sat: level, transitiontime: transitiontime * 10])
 }
@@ -968,14 +969,14 @@ def setHue(childDevice, percent, transitiontime) {
 }
 
 def setGroupHue(childDevice, percent, transitiontime) {
-	log.debug "Executing 'setHue($percent)'"
+	log.debug "Executing 'setGroupHue($percent)'"
 	def level =	Math.min(Math.round(percent * 65535 / 100), 65535)
 	put("groups/${getId(childDevice)}/action", [hue: level, transitiontime: transitiontime * 10])
 }
 
 def setGroupScene(childDevice, Number inGroupID, Number inTime) {
 	log.trace "setGroupScene: received inGroupID of ${inGroupID} and transitionTime of ${inTime}."
-	def sceneID = getId(childDevice) - "s"
+	def sceneID = getId(childDevice) // - "s"
     def groupID = inGroupID ?: "0"
 	log.debug "setGroupScene: scene = ${sceneID} "
     String path = "groups/${groupID}/action/"
@@ -1006,6 +1007,30 @@ def setColor(childDevice, color) {
 
 	log.debug "sending command $value"
 	put("lights/${getId(childDevice)}/state", value)
+}
+
+def setToGroup(childDevice, Number inGroupID, Number inTime) {
+	log.trace "setToGroup: received inGroupID of ${inGroupID} and transitionTime of ${inTime}."
+	def sceneID = getId(childDevice) - "s"
+    def groupID = inGroupID ?: "0"
+	log.debug "setToGroup: sceneID = ${sceneID} "
+    String path = "groups/${groupID}/action/"
+    
+	log.debug "Path = ${path} "
+
+	put("${path}", [scene: sceneID, transitiontime: inTime * 10])
+}
+
+def updateScene(childDevice) {
+	log.trace "updateScene: Scene ${childDevice} requests scene use current light states."
+	def sceneID = getSceneId(childDevice) // - "s"
+
+	log.debug "setToGroup: sceneID = ${sceneID} "
+    String path = "scenes/${sceneID}/"
+    
+	log.debug "Path = ${path} "
+
+	put("${path}", [storelightstate: true])
 }
 
 def setGroupColor(childDevice, color) {
@@ -1107,18 +1132,37 @@ private put(path, body) {
 		uri = "/api/${state.username}/$path"[0..-1]
 
 	}
+    if(path.startsWith("scenes"))
+	{
+		log.debug "MODIFY SCENES"
+		uri = "/api/${state.username}/$path"[0..-1]
+
+	}
+    
 	def bodyJSON = new groovy.json.JsonBuilder(body).toString()
 	def length = bodyJSON.getBytes().size().toString()
 
 	log.debug "PUT:  $uri"
-	log.debug "BODY: ${bodyJSON}"
+	log.debug "BODY: body"  // ${bodyJSON}"
+//
 
+sendHubCommand(new physicalgraph.device.HubAction([
+method: "PUT",
+path: uri,
+headers: [
+HOST: selectedHue
+],
+body: body], "${selectedHue}"))
+//
+
+/**
 	sendHubCommand(new physicalgraph.device.HubAction("""PUT $uri HTTP/1.1
 HOST: ${selectedHue}
 Content-Length: ${length}
 
 ${bodyJSON}
 """, physicalgraph.device.Protocol.LAN, "${selectedHue}"))
+**/
 
 }
 
