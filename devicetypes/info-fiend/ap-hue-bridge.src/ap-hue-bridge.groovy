@@ -65,7 +65,7 @@ def parse(description) {
                     bgs.each{
                     	
                     	isScene = it.toString().contains( "recycle" )
-                        isGroup = it.toString().contains( "class" )
+                        isGroup = it.toString().contains( "lights" )
                     }
 					//log.info "BULBS: $bulbs"
 					if (bgs.state) {
