@@ -1,7 +1,6 @@
 /**
  *  Hue Lights and Groups and Scenes (OH MY) - new Hue Service Manager
- *  v 1.1
- 
+ *
  *  Author: Anthony Pastor
  *
  *  To-Do:
@@ -13,7 +12,7 @@ definition(
     name: "Hue Lights and Groups and Scenes (OH MY)",
     namespace: "info_fiend",
     author: "Anthony Pastor",
-	description: "Connects your Philips Hue lights, groups and scenes.",
+	description: "Allows you to connect your Philips Hue lights with SmartThings and control them from your Things area or Dashboard in the SmartThings Mobile app. Adjust colors by going to the Thing detail screen for your Hue lights (tap the gear on Hue tiles).\n\nPlease update your Hue Bridge first, outside of the SmartThings app, using the Philips Hue app.",
 	category: "SmartThings Labs",
 	iconUrl: "https://s3.amazonaws.com/smartapp-icons/Partner/hue.png",
 	iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Partner/hue@2x.png"
@@ -1021,18 +1020,6 @@ def setToGroup(childDevice, Number inGroupID, Number inTime) {
 	put("${path}", [scene: sceneID, transitiontime: inTime * 10])
 }
 
-def updateScene(childDevice) {
-	log.trace "updateScene: Scene ${childDevice} requests scene use current light states."
-	def sceneID = getSceneId(childDevice) // - "s"
-
-	log.debug "setToGroup: sceneID = ${sceneID} "
-    String path = "scenes/${sceneID}/"
-    
-	log.debug "Path = ${path} "
-
-	put("${path}", [storelightstate: true])
-}
-
 def setGroupColor(childDevice, color) {
 	log.debug "Executing 'setColor($color)'"
 	def hue =	Math.min(Math.round(color.hue * 65535 / 100), 65535)
@@ -1091,7 +1078,7 @@ HOST: ${selectedHue}
 
 }
 
-private getId(childDevice) {
+def getId(childDevice) {
 	log.debug "WORKING SPOT"
 	if (childDevice.device?.deviceNetworkId?.startsWith("HUE")) {
 		log.trace childDevice.device?.deviceNetworkId[3..-1]
@@ -1103,7 +1090,7 @@ private getId(childDevice) {
 }
 
 
-def getSceneID(childDevice) {
+def getSceneId(childDevice) {
 	def scenes = getHueScenes()
 	scenes.each { dni ->
 		def d = getChildDevice(dni)
@@ -1122,6 +1109,33 @@ def getSceneID(childDevice) {
 		
 	}
 }
+
+def updateScene(childDevice) {
+	log.trace "updateScene: Scene ${childDevice} requests scene use current light states."
+	def sceneID = getId(childDevice) - "s"
+
+	log.debug "updateScene: sceneID = ${sceneID} "
+    String path = "scenes/${sceneID}/"
+    
+	log.debug "Path = ${path} "
+
+	put("${path}", [storelightstate: true])
+}
+
+def deleteScene(childDevice) {
+	log.trace "deleteScene: Delete scene ${childDevice}."
+	def sceneID = getId(childDevice) - "s"
+
+	log.debug "deleteScene: sceneID = ${sceneID} "
+    String path = "scenes/${sceneID}/"
+    
+	log.debug "Path = ${path} "
+
+	delete("${path}")
+}
+
+
+
 
 
 private put(path, body) {
