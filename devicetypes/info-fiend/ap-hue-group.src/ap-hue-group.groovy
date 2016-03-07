@@ -56,7 +56,7 @@ metadata {
 			state "groupID", label: 'groupID ${currentValue}   '
 		}
 		standardTile("getGroupID", "device.getGroupID", inactiveLabel: false, decoration: "flat", defaultState: "Ready") {
-       		state "Normal", label: 'Get groupID', action:"device.getGroupID", backgroundColor:"#BDE5F2", nextState: "Retrieving"
+       		state "Normal", label: 'Get groupID', action:"switch groupID.getGroupID", backgroundColor:"#BDE5F2", nextState: "Retrieving"
 	    	state "Retrieving", label: 'Retrieving', backgroundColor: "#ffffff", nextState: "Normal"
     	}
 
@@ -301,7 +301,7 @@ def adjustOutgoingHue(percent) {
 void getGroupID() {
     log.debug "(this) means ${this} "
     
-	def groupIDfromP = parent.getGroupID(this)
+	def groupIDfromP = parent.getId(this)
     log.debug "Retrieved groupID: ${groupIDfromP}."
    
     sendEvent(name: "groupID", value: "${groupIDfromP}", isStateChange: true)

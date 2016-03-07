@@ -20,6 +20,7 @@ metadata {
 		command "setToGroup"
         command "updateScene"
         command "getSceneID"
+        command "deleteScene"
     }
 
     // simulator metadata
@@ -40,15 +41,18 @@ metadata {
 	}
         
     standardTile("getSceneID", "device.getSceneID", inactiveLabel: false, decoration: "flat", defaultState: "Ready") {
-       	state "Normal", label: 'Get SceneID', action:"getSceneID.getSceneID", backgroundColor:"#BDE5F2", nextState: "Retrieving"
+       	state "Normal", label: 'Get SceneID', action:"getSceneID", backgroundColor:"#BDE5F2", nextState: "Retrieving"
 	    state "Retrieving", label: 'Retrieving', backgroundColor: "#ffffff", nextState: "Normal"
     }
         
 	standardTile("updateScene", "device.updateScene", decoration: "flat", defaultState: "Ready") {
-       	state "Ready", label: 'Update Scene', action:"device.updateScene", backgroundColor:"#F505F5", nextState: "Updating"
+       	state "Ready", label: 'Update Scene', action:"updateScene", backgroundColor:"#F505F5", nextState: "Updating"
 	    state "Updating", label: 'Updating...', backgroundColor: "#ffffff", nextState: "Ready"
     }
-    
+    standardTile("deleteScene", "device.deleteScene", decoration: "flat", defaultState: "Ready") {
+       	state "Ready", label: 'Delete Scene', action:"deleteScene", backgroundColor:"#F505F5", nextState: "Deleting"
+	    state "Deleting", label: 'Deleting...', backgroundColor: "#ffffff", nextState: "Ready"
+    }
     
     main "switch"
     details (["switch", "sceneID", "refresh", "getSceneID", "updateScene"])
@@ -92,6 +96,12 @@ def setToGroup ( Integer inGroupID ) {
 def updateScene() {
 	log.trace "${this}: Update Scene Reached."
 	parent.updateScene(this)
+    
+}
+
+def deleteScene() {
+	log.trace "${this}: Delete Scene Reached."
+	parent.deleteScene(this)
     
 }
 

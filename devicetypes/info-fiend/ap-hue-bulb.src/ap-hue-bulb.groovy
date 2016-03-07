@@ -175,6 +175,16 @@ void setLevel(percent) {
 
 }
 
+void setLevel(percent, transitiontime) {
+	
+	log.debug "Executing 'setLevel'"
+	parent.setLevel(this, percent, transitiontime)
+	sendEvent(name: "level", value: percent)
+	sendEvent(name: "transitiontime", value: transitiontime)
+    sendEvent(name: "switch", value: "on", isStateChange: true)
+
+}
+
 void setSaturation(percent) 
 {
 	def transitionTime = device.currentValue("transitiontime")
