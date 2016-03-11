@@ -23,6 +23,7 @@ metadata {
         command "setTT"
         command "getGroupID"
         command "setColorTemp"
+		command "log", ["string","string"]        
         
 		attribute "groupID", "STRING"
         attribute "transTime", "NUMBER"
@@ -258,7 +259,7 @@ void setHue(percent, transitiontime)
 }
 
 void setColor(value) {
-	log.debug "setColor: ${value}"
+	// log.debug "setColor: ${value}"
 
 	
 	if(value.transitiontime)
@@ -338,7 +339,7 @@ def adjustOutgoingHue(percent) {
 			adjusted = percent + (2 * (100 - percent) / 28)
 		}
 	}
-	log.info "percent: $percent, adjusted: $adjusted"
+	log.info "adjustOutgoingHue: $percent, adjusted: $adjusted"
 	adjusted
 }
 
@@ -351,4 +352,30 @@ void getGroupID() {
    
     sendEvent(name: "groupID", value: "${groupIDfromP}", isStateChange: true)
 
+}
+
+def log(message, level = "trace") {
+	switch (level) {
+    	case "trace":
+        	log.trace "LOG FROM PARENT>" + message
+            break;
+            
+    	case "debug":
+        	log.debug "LOG FROM PARENT>" + message
+            break
+            
+    	case "warn":
+        	log.warn "LOG FROM PARENT>" + message
+            break
+            
+    	case "error":
+        	log.error "LOG FROM PARENT>" + message
+            break
+            
+        default:
+        	log.error "LOG FROM PARENT>" + message
+            break;
+    }            
+    
+    return null // always child interface call with a return value
 }

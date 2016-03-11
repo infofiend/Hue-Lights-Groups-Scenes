@@ -27,6 +27,8 @@ metadata {
         command "getSceneID"
 //        command "deleteScene"
 //        command "setTT"
+		command "log", ["string","string"]
+        
     }
 
     // simulator metadata
@@ -53,9 +55,8 @@ metadata {
 //		    state "State2", label: 'Retrieving', backgroundColor: "#ffffff", nextState: "State1"
     	}
         
-		standardTile("updateScene", "device.updateScene", inactiveLabel: false, canChangeIcon: true, decoration: "flat", width: 2, height: 2, defaultState: "Ready") {
-    	   	state "Ready", label: 'Update Scene', action:"updateScene", backgroundColor:"#F505F5", nextState: "Updating"
-	    	state "Updating", label: 'Updating...', backgroundColor: "#ffffff", nextState: "Ready"
+		standardTile("updateScene", "device.updateScene", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+    	   	state "Ready", label: 'UpdateScene                             ', action:"updateScene", backgroundColor:"#FBB215"
 	    }
 //    standardTile("deleteScene", "device.deleteScene", decoration: "flat", defaultState: "Ready") {
 //       	state "Ready", label: 'Delete Scene', action:"deleteScene", backgroundColor:"#F505F5", nextState: "Deleting"
@@ -132,8 +133,23 @@ def setToGroup ( Integer inGroupID ) {
 
 def updateScene() {
 	log.trace "${this}: Update Scene Reached."
-	parent.updateScene(this)
+//    def sceneIDfromP = parent.getId(this) 
+    def sceneIDfromD = device.currentValue("sceneID") 
+
+    log.debug "Retrieved sceneIDfromD: ${sceneIDfromD}."
+    String myScene = sceneIDfromD
     
+    if (sceneIDfromD == null) {
+    	def sceneIDfromP = parent.getID(this) - "s"
+    	log.debug "Retrieved sceneIDfromP: ${sceneIDfromP}."    
+    }
+   
+    
+//    parent.updateScene(this)
+//    parent.updateSceneUsingID(this, sceneIDfromP)
+    parent.updateSceneUsingID(this, myScene)
+    
+
 }
 
 def deleteScene() {
@@ -145,10 +161,12 @@ def deleteScene() {
 def getSceneID() {
  //   log.debug "(this) means ${this} "
     
-	def sceneIDfromP = parent.getId(this)
+	def sceneIDfromP = parent.getId(this) - "s" 
+    def realSceneID = sceneIDfromP - "s"
     log.debug "Retrieved sceneID: ${sceneIDfromP}."
+	log.debug "Real sceneID: ${realSceneID}."
    
-    sendEvent(name: "sceneID", value: "${sceneIDfromP}", isStateChange: true)
+    sendEvent(name: "sceneID", value: "${realSceneID}", isStateChange: true)
     // sendEvent(name: "getSceneID", state: "State1", isStateChange: true)
 //	refresh()
 }
@@ -160,4 +178,31 @@ def poll() {
 def refresh() {
 	log.debug "Executing 'refresh'"
 	parent.poll()
+}
+
+
+def log(message, level = "trace") {
+	switch (level) {
+    	case "trace":
+        	log.trace "LOG FROM PARENT>" + message
+            break;
+            
+    	case "debug":
+        	log.debug "LOG FROM PARENT>" + message
+            break
+            
+    	case "warn":
+        	log.warn "LOG FROM PARENT>" + message
+            break
+            
+    	case "error":
+        	log.error "LOG FROM PARENT>" + message
+            break
+            
+        default:
+        	log.error "LOG FROM PARENT>" + message
+            break;
+    }            
+    
+    return null // always child interface call with a return value
 }

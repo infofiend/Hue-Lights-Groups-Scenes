@@ -26,6 +26,7 @@ metadata {
         command "refresh"  
         command "setColorTemp"
         command "setTT"
+		command "log", ["string","string"]        
         
         attribute "transTime", "NUMBER"
         attribute "colorTemp", "NUMBER"
@@ -357,4 +358,30 @@ def adjustOutgoingHue(percent) {
 	}
 	log.info "percent: $percent, adjusted: $adjusted"
 	adjusted
+}
+
+def log(message, level = "trace") {
+	switch (level) {
+    	case "trace":
+        	log.trace "LOG FROM PARENT>" + message
+            break;
+            
+    	case "debug":
+        	log.debug "LOG FROM PARENT>" + message
+            break
+            
+    	case "warn":
+        	log.warn "LOG FROM PARENT>" + message
+            break
+            
+    	case "error":
+        	log.error "LOG FROM PARENT>" + message
+            break
+            
+        default:
+        	log.error "LOG FROM PARENT>" + message
+            break;
+    }            
+    
+    return null // always child interface call with a return value
 }
