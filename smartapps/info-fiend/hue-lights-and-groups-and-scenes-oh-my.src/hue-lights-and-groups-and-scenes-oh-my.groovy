@@ -3,7 +3,8 @@
  *
  *  Author: Anthony Pastor
  *
- *  Version 1.3: Added colorTemp ability with setCT() & setGroupCT; fixed updateScene; merged getID
+ *  To-Do:
+ *  	- DNI = MAC address
  *
  */
  
@@ -973,13 +974,13 @@ def setGroupHue(childDevice, percent, transitiontime) {
 }
 
 def setGroupScene(childDevice, Number inGroupID) {
-	log.trace "setGroupScene: received inGroupID of ${inGroupID}." // and transitionTime of ${inTime}."
+	childDevice?.log "setGroupScene: received inGroupID of ${inGroupID}." // and transitionTime of ${inTime}."
 	def sceneID = getId(childDevice) // - "s"
     def groupID = inGroupID ?: "0"
-	log.debug "setGroupScene: scene = ${sceneID} "
+	childDevice?.log "setGroupScene: scene = ${sceneID} "
     String path = "groups/${groupID}/action/"
     
-	log.debug "Path = ${path} "
+	childDevice?.log "Path = ${path} "
 
 	put("${path}", [scene: sceneID]) // , transitiontime: inTime * 10])
 }
@@ -1021,12 +1022,12 @@ def setGroupCT(childDevice, cTemp, transitiontime) {
 
 
 def setToGroup(childDevice, Number inGroupID ) {
-	log.trace "setToGroup: received inGroupID of ${inGroupID}." //  and transitionTime of ${inTime}."
+	childDevice?.log "setToGroup: received inGroupID of ${inGroupID}." //  and transitionTime of ${inTime}."
 	def sceneID = getId(childDevice) - "s"
     def groupID = inGroupID ?: "0"
-    def newTT = inTime as Integer
+//    def newTT = inTime as Integer
     
-	log.debug "setToGroup: sceneID = ${sceneID} "
+	childDevice?.log "setToGroup: sceneID = ${sceneID} "
     String gPath = "groups/${groupID}/action/"
     
 //    String sPath = "scenes/${sceneID}/"
@@ -1035,13 +1036,13 @@ def setToGroup(childDevice, Number inGroupID ) {
 
 //	put("${sPath}", [transitiontime: newTT * 10])
     
-	log.debug "Group path = ${gPath} "
+	childDevice?.log "Group path = ${gPath} "
 
 	put("${gPath}", [scene: sceneID])
 }
 
 def setGroupColor(childDevice, color) {
-	log.debug "Executing 'setColor($color)'"
+	childDevice?.log "Executing 'setColor($color)'"
 	def hue =	Math.min(Math.round(color.hue * 65535 / 100), 65535)
 	def sat = Math.min(Math.round(color.saturation * 255 / 100), 255)
 
@@ -1059,7 +1060,7 @@ def setGroupColor(childDevice, color) {
 		value.on = color.switch == "on"
 	}
 
-	log.debug "sending command $value"
+	childDevice?.log "sending command $value"
 	put("groups/${getId(childDevice)}/action", value)
 }
 
@@ -1099,7 +1100,7 @@ HOST: ${selectedHue}
 }
 
 def getId(childDevice) {
-	log.debug "Executing getId"
+	childDevice?.log "Executing getId"
 	if (childDevice.device?.deviceNetworkId?.startsWith("HUE")) {
 		log.trace childDevice.device?.deviceNetworkId[3..-1]
 		return childDevice.device?.deviceNetworkId[3..-1]
@@ -1150,25 +1151,43 @@ def updateTransTime(childDevice, newTT) {
 **/
 
 def updateScene(childDevice) {
-	log.trace "updateScene: Scene ${childDevice} requests scene use current light states."
+	childDevice?.log "updateScene: Scene ${childDevice} requests scene use current light states."
 	def sceneID = getId(childDevice) - "s"
 
-	log.debug "updateScene: sceneID = ${sceneID} "
+	childDevice?.log "updateScene: sceneID = ${sceneID} "
     String path = "scenes/${sceneID}/"
-    
+
+	def value = [storelightstate: true]
 	log.debug "Path = ${path} "
 
-	put("${path}", [storelightstate: true])
+	put("scenes/${sceneID}/", value)
+}
+
+def updateSceneUsingID(childDevice, sceneID) {
+//	log.trace "updateScene: Scene ${childDevice} requests scene use current light states."
+
+	childDevice?.log "parent.updateSceneUsingID: child's sceneID = ${sceneID} ","debug"
+    childDevice?.log "scenes/${sceneID}/" 
+
+//	log.debug "path = ${path} ."
+
+// 	def value = [storelightstate: true]
+//	log.debug "updateSceneUsingID: first attempt: "
+//	put("scenes/${sceneID}/", value)
+    
+	childDevice?.log "updateSceneUsingID: first attempt " 
+    
+   	put("${path}", ["storelightstate": true])
 }
 
 def deleteScene(childDevice) {
-	log.trace "deleteScene: Delete scene ${childDevice}."
+	childDevice?.log "deleteScene: Delete scene ${childDevice}."
 	def sceneID = getId(childDevice) - "s"
 
-	log.debug "deleteScene: sceneID = ${sceneID} "
+	childDevice?.log "deleteScene: sceneID = ${sceneID} "
     String path = "scenes/${sceneID}/"
     
-	log.debug "Path = ${path} "
+//	log.debug "Path = ${path} "
 
 	delete("${path}")
 }
@@ -1181,22 +1200,22 @@ private put(path, body) {
 	def uri = "/api/${state.username}/$path"
 	if(path.startsWith("groups"))
 	{
-		log.debug "MODIFY GROUPS"
+//		log.debug "MODIFY GROUPS"
 		uri = "/api/${state.username}/$path"[0..-1]
 
 	}
     if(path.startsWith("scenes"))
 	{
-		log.debug "MODIFY SCENES"
+//		log.debug "MODIFY SCENES"
 		uri = "/api/${state.username}/$path"[0..-1]
 
 	}
     
 	def bodyJSON = new groovy.json.JsonBuilder(body).toString()
-	def length = bodyJSON.getBytes().size().toString()
+//	def length = bodyJSON.getBytes().size().toString()
 
-	log.debug "PUT:  $uri"
-	log.debug "BODY: body"  // ${bodyJSON}"
+	childDevice?.log "PUT:  $uri"
+	childDevice?.log "BODY: body"  // ${bodyJSON}"
 //
 
 sendHubCommand(new physicalgraph.device.HubAction([
@@ -1206,16 +1225,6 @@ headers: [
 HOST: selectedHue
 ],
 body: body], "${selectedHue}"))
-//
-
-/**
-	sendHubCommand(new physicalgraph.device.HubAction("""PUT $uri HTTP/1.1
-HOST: ${selectedHue}
-Content-Length: ${length}
-
-${bodyJSON}
-""", physicalgraph.device.Protocol.LAN, "${selectedHue}"))
-**/
 
 }
 
