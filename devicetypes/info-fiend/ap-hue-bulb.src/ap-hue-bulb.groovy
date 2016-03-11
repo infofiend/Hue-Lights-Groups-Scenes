@@ -1,9 +1,14 @@
 /**
  *  AP Hue Bulb
  *
+ *	Version 1.3: Added Color Temp slider & valueTile
+ *				 Added Transition Time slider & valueTile	
+ *
  *  Author: Anthony Pastor
  */
 // for the UI
+
+
 metadata {
 	// Automatically generated. Make future change here.
 	definition (name: "AP Hue Bulb", namespace: "info_fiend", author: "Anthony Pastor") {
@@ -18,9 +23,12 @@ metadata {
 
 		command "setAdjustedColor"
         command "reset"        
-        command "refresh"     
+        command "refresh"  
+        command "setColorTemp"
+        command "setTT"
         
-        attribute "transitiontime", "number"
+        attribute "transTime", "NUMBER"
+        attribute "colorTemp", "NUMBER"
         
 	}
 
@@ -50,14 +58,25 @@ metadata {
 		standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
 			state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
 		}
-        valueTile("transitiontime", "device.transitiontime", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "transitiontime", label: 'Transition    Time: ${currentValue}'
+        
+        controlTile("transitiontime", "device.transTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") { 
+        	state "setTT", action:"setTT", backgroundColor:"#d04e00"
 		}
+		valueTile("valueTT", "device.transTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+			state "transTime", label: 'Transition    Time: ${currentValue}'
+        }
+        
+        controlTile("colorTemp", "device.colorTemp", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(153..500)") { 
+        	state "setCT", action:"setColorTemp", backgroundColor:"#54f832"
+		}
+		valueTile("valueCT", "device.colorTemp", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+			state "colorTemp", label: ' ColorTemp:  ${currentValue}'
+        }
 
 	}
 
 	main(["switch"])
-	details(["switch", "levelSliderControl", "rgbSelector", "transitiontime", "refresh", "reset"])
+	details(["switch", "transitiontime","valueTT","colorTemp","valueCT","refresh", "reset"])
 }
 
 
@@ -90,7 +109,7 @@ void on()
     	level = 100
     }
 
-	def transitionTime = device.currentValue("transitiontime")
+	def transitionTime = device.currentValue("transTime")
     if(transitionTime == null)
     {
     	transitionTime = 3
@@ -100,7 +119,7 @@ void on()
     
 	parent.on(this, transitionTime, level)
 	sendEvent(name: "switch", value: "on")
-	sendEvent(name: "transitiontime", value: transitionTime, isStateChange: true)
+	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
 
 void on(transitiontime)
@@ -112,12 +131,12 @@ void on(transitiontime)
     }
 	parent.on(this, transitiontime, level)
 	sendEvent(name: "switch", value: "on")
-	sendEvent(name: "transitiontime", value: transitiontime, isStateChange: true)
+	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
 
 void off() 
 {
-	def transitionTime = device.currentValue("transitiontime")
+	def transitionTime = device.currentValue("transTime")
     if(transitionTime == null)
     {
     	transitionTime = 3
@@ -127,15 +146,40 @@ void off()
     
 	parent.off(this, transitionTime)
 	sendEvent(name: "switch", value: "off")
-	sendEvent(name: "transitiontime", value: transitionTime, isStateChange: true)
+	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
 
 void off(transitiontime)
 {
 	parent.off(this, transitiontime)
 	sendEvent(name: "switch", value: "off")
-	sendEvent(name: "transitiontime", value: transitiontime, isStateChange: true)
+	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
+
+void setTT(transitiontime) {
+
+	log.debug "Executing 'setTT': transition time is now ${transitiontime}."
+	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
+    
+}
+
+void setColorTemp(colorT) {
+    if(colorT == null)
+    {
+    	colorT = 300
+    }
+    
+    def transitionTime = device.currentValue("transTime")
+    if(transitionTime == null) {
+    	transitionTime = 3
+    }
+    
+	log.debug "Executing 'setColorTemp'"
+	parent.setCT(this, colorT, transitionTime)
+	sendEvent(name: "colorTemp", value: colorT, isStateChange: true)
+
+}
+
 
 void reset() {
 	log.debug "Executing 'reset'"
@@ -156,7 +200,7 @@ void nextLevel() {
 }
 
 void setLevel(percent) {
-	def transitionTime = device.currentValue("transitiontime")
+	def transitionTime = device.currentValue("transTime")
     if(transitionTime == null)
     {
     	transitionTime = 3
@@ -170,7 +214,7 @@ void setLevel(percent) {
 	log.debug "Executing 'setLevel'"
 	parent.setLevel(this, percent, transitionTime)
 	sendEvent(name: "level", value: percent)
-	sendEvent(name: "transitiontime", value: transitionTime)
+	sendEvent(name: "transTime", value: transitionTime)
     sendEvent(name: "switch", value: "on", isStateChange: true)
 
 }
@@ -180,14 +224,14 @@ void setLevel(percent, transitiontime) {
 	log.debug "Executing 'setLevel'"
 	parent.setLevel(this, percent, transitiontime)
 	sendEvent(name: "level", value: percent)
-	sendEvent(name: "transitiontime", value: transitiontime)
+	sendEvent(name: "transTime", value: transitiontime)
     sendEvent(name: "switch", value: "on", isStateChange: true)
 
 }
 
 void setSaturation(percent) 
 {
-	def transitionTime = device.currentValue("transitiontime")
+	def transitionTime = device.currentValue("transTime")
     if(transitionTime == null)
     {
     	transitionTime = 3
@@ -197,7 +241,7 @@ void setSaturation(percent)
 	log.debug "Executing 'setSaturation'"
 	parent.setSaturation(this, percent, transitionTime)
 	sendEvent(name: "saturation", value: percent)
-	sendEvent(name: "transitiontime", value: transitionTime, isStateChange: true)
+	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
 
 void setSaturation(percent, transitiontime) 
@@ -205,12 +249,12 @@ void setSaturation(percent, transitiontime)
 	log.debug "Executing 'setSaturation'"
 	parent.setSaturation(this, percent, transitiontime)
 	sendEvent(name: "saturation", value: percent)
-	sendEvent(name: "transitiontime", value: transitiontime, isStateChange: true)
+	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
 
 void setHue(percent) 
 {
-	def transitionTime = device.currentValue("transitiontime")
+	def transitionTime = device.currentValue("transTime")
     if(transitionTime == null)
     {
     	transitionTime = 3
@@ -221,7 +265,7 @@ void setHue(percent)
 	log.debug "Executing 'setHue'"
 	parent.setHue(this, percent, transitionTime)
 	sendEvent(name: "hue", value: percent)
-	sendEvent(name: "transitiontime", value: transitionTime, isStateChange: true)
+	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
 
 void setHue(percent, transitiontime) 
@@ -229,7 +273,7 @@ void setHue(percent, transitiontime)
 	log.debug "Executing 'setHue'"
 	parent.setHue(this, percent, transitiontime)
 	sendEvent(name: "hue", value: percent)
-	sendEvent(name: "transitiontime", value: transitiontime, isStateChange: true)
+	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
 
 void setColor(value) {
@@ -239,18 +283,18 @@ void setColor(value) {
 	// TODO: convert hue and saturation to hex and just send a color event
 	if(value.transitiontime)
 	{
-		sendEvent(name: "transitiontime", value: value.transitiontime)
+		sendEvent(name: "transTime", value: value.transitiontime)
 	}
 	else
 	{
-    	def transitionTime = device.currentValue("transitiontime")
+    	def transitionTime = device.currentValue("transTime")
 	    if(transitionTime == null)
     	{
     		transitionTime = 3
 	    }
     
 //    	log.debug this ": tt= ${transitionTime}"
-		sendEvent(name: "transitiontime", value: transitionTime, isStateChange: true)
+		sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 		value << [transitiontime: transitionTime]
 	}
 	if (value.hex) 
