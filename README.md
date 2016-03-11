@@ -6,11 +6,11 @@ I've created a Hue Service Manager that finds and installs (1) individual Hue Li
 
 **UPDATED:  new abilities include**
 
-1. Color Temperature Slider Control from Bulbs or Groups
+1. Color Temperature Slider Control from Bulb or Group devices
 
-2. Transition Time Slider Control from Bulbs or Groups
+2. Transition Time Slider Control from Bulb or Group devices
 
-3. Ability to update Scene settings directly from Scene device
+3. Ability to update - directly from Scene devices - any Scene settings with current lightstates 
 
 4. Scene devices can retrieve & display Hue Hub sceneID
 
