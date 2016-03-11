@@ -973,8 +973,8 @@ def setGroupHue(childDevice, percent, transitiontime) {
 	put("groups/${getId(childDevice)}/action", [hue: level, transitiontime: transitiontime * 10])
 }
 
-def setGroupScene(childDevice, Number inGroupID, Number inTime) {
-	log.trace "setGroupScene: received inGroupID of ${inGroupID} and transitionTime of ${inTime}."
+def setGroupScene(childDevice, Number inGroupID) {
+	log.trace "setGroupScene: received inGroupID of ${inGroupID}." // and transitionTime of ${inTime}."
 	def sceneID = getId(childDevice) // - "s"
     def groupID = inGroupID ?: "0"
 	log.debug "setGroupScene: scene = ${sceneID} "
@@ -982,7 +982,7 @@ def setGroupScene(childDevice, Number inGroupID, Number inTime) {
     
 	log.debug "Path = ${path} "
 
-	put("${path}", [scene: sceneID, transitiontime: inTime * 10])
+	put("${path}", [scene: sceneID]) // , transitiontime: inTime * 10])
 }
 
 def setColor(childDevice, color) {
@@ -1008,16 +1008,37 @@ def setColor(childDevice, color) {
 	put("lights/${getId(childDevice)}/state", value)
 }
 
-def setToGroup(childDevice, Number inGroupID, Number inTime) {
-	log.trace "setToGroup: received inGroupID of ${inGroupID} and transitionTime of ${inTime}."
+def setCT(childDevice, cTemp, transitiontime) {
+	log.debug "Executing 'setCT'"
+	def value = [ct: cTemp, transitiontime: transitiontime * 10]
+	put("lights/${getId(childDevice)}/state", value)
+}
+
+def setGroupCT(childDevice, cTemp, transitiontime) {
+	log.debug "Executing 'setCT'"
+	def value = [ct: cTemp, transitiontime: transitiontime * 10]
+	put("groups/${getId(childDevice)}/action", value)
+}
+
+
+def setToGroup(childDevice, Number inGroupID ) {
+	log.trace "setToGroup: received inGroupID of ${inGroupID}." //  and transitionTime of ${inTime}."
 	def sceneID = getId(childDevice) - "s"
     def groupID = inGroupID ?: "0"
-	log.debug "setToGroup: sceneID = ${sceneID} "
-    String path = "groups/${groupID}/action/"
+    def newTT = inTime as Integer
     
-	log.debug "Path = ${path} "
+	log.debug "setToGroup: sceneID = ${sceneID} "
+    String gPath = "groups/${groupID}/action/"
+    
+//    String sPath = "scenes/${sceneID}/"
+    
+//	log.debug "Scene path = ${sPath} "
 
-	put("${path}", [scene: sceneID, transitiontime: inTime * 10])
+//	put("${sPath}", [transitiontime: newTT * 10])
+    
+	log.debug "Group path = ${gPath} "
+
+	put("${gPath}", [scene: sceneID])
 }
 
 def setGroupColor(childDevice, color) {
@@ -1079,7 +1100,7 @@ HOST: ${selectedHue}
 }
 
 def getId(childDevice) {
-	log.debug "WORKING SPOT"
+	log.debug "Executing getId"
 	if (childDevice.device?.deviceNetworkId?.startsWith("HUE")) {
 		log.trace childDevice.device?.deviceNetworkId[3..-1]
 		return childDevice.device?.deviceNetworkId[3..-1]
@@ -1090,6 +1111,7 @@ def getId(childDevice) {
 }
 
 
+/** 
 def getSceneId(childDevice) {
 	def scenes = getHueScenes()
 	scenes.each { dni ->
@@ -1109,6 +1131,24 @@ def getSceneId(childDevice) {
 		
 	}
 }
+
+**/
+
+/**
+def updateTransTime(childDevice, newTT) {
+	def sceneID = getId(childDevice) - "s"
+	log.debug "updateTransTime: new transition time of ${newTT} for Scene ${sceneID}."
+    def transTime = newTT * 10
+    
+    String path = "scenes/${sceneID}/"
+    
+	log.debug "Path = ${path} "
+
+	put("${path}", [transitiontime: transTime])
+    
+}
+
+**/
 
 def updateScene(childDevice) {
 	log.trace "updateScene: Scene ${childDevice} requests scene use current light states."
