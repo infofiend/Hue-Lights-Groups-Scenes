@@ -307,8 +307,8 @@ void setColor(value) {
 	} 
 	else if (value.hue && value.saturation) 
 	{
-		def hex = colorUtil.hslToHex(value.hue, value.saturation, isStateChange: true)
-		sendEvent(name: "color", value: hex)
+		def hex = colorUtil.hslToHex(value.hue, value.saturation)
+		sendEvent(name: "color", value: hex, isStateChange: true)
 	}
 
 	if (value.level) 
