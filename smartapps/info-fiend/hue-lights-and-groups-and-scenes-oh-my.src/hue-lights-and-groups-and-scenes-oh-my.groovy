@@ -3,8 +3,7 @@
  *
  *  Author: Anthony Pastor
  *
- *  To-Do:
- *  	- DNI = MAC address
+ *  Version 1.3: Added colorTemp ability with setCT() & setGroupCT; fixed updateScene; merged getID
  *
  */
  
