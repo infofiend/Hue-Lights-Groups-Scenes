@@ -1,6 +1,9 @@
 # Hue-Lights-Groups-Scenes
 SmartThings SmartApps &amp; Device Handlers
 
+I've created a Hue Service Manager that finds and installs (1) individual Hue Lights, (2) Hue Groups, and (3) Hue Scenes.
+
+
 **UPDATED:  new abilities include**
 
 1. Color Temperature Slider Control from Bulbs or Groups
@@ -14,9 +17,6 @@ SmartThings SmartApps &amp; Device Handlers
 5. Group devices can retrieve & display Hue Hub groupID
 
 ----------
-
-
-I've created a Hue Service Manager that finds and installs (1) individual Hue Lights, (2) Hue Groups, and (3) Hue Scenes.
 
 
 Installation Instructions
