@@ -1,11 +1,22 @@
 # Hue-Lights-Groups-Scenes
 SmartThings SmartApps &amp; Device Handlers
 
+**UPDATED:  new abilities include**
+
+1. Color Temperature Slider Control from Bulbs or Groups
+
+2. Transition Time Slider Control from Bulbs or Groups
+
+3. Ability to update Scene settings directly from Scene device
+
+4. Scene devices can retrieve & display Hue Hub sceneID
+
+5. Group devices can retrieve & display Hue Hub groupID
+
+----------
+
 
 I've created a Hue Service Manager that finds and installs (1) individual Hue Lights, (2) Hue Groups, and (3) Hue Scenes.
-
-I say "created" above only in the sense that I modified the amazing work of zpriddy - who created the Hue Lights and Groups (Connect) SmartApp.
-
 
 
 Installation Instructions
@@ -31,3 +42,4 @@ Etc...
 --------
 1. I'll update this post with more info / screenshots later -- just wanted to distribute this now.
 
+Thanks to zpriddy for his work on Hue Groups (Connect)!
