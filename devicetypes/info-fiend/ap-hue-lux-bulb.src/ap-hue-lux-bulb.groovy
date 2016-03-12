@@ -20,22 +20,40 @@ metadata {
 		// TODO: define status and reply messages here
 	}
 
-	standardTile("switch", "device.switch", width: 2, height: 2, canChangeIcon: true) {
-		state "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821"
-		state "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff"
-	}
-	standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat") {
-		state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
-	}
-	controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 2, inactiveLabel: false) {
-		state "level", action:"switch level.setLevel"
-	}
-	valueTile("level", "device.level", inactiveLabel: false, decoration: "flat") {
-		state "level", label: 'Level ${currentValue}%'
-	}
+	tiles(scale: 2) {
+        multiAttributeTile(name:"rich-control", type: "lighting", canChangeIcon: true){
+            tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
+              attributeState "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
+              attributeState "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+              attributeState "turningOn", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
+              attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+            }
+            tileAttribute ("device.level", key: "SLIDER_CONTROL") {
+              attributeState "level", action:"switch level.setLevel", range:"(0..100)"
+            }
+            tileAttribute ("device.level", key: "SECONDARY_CONTROL") {
+	            attributeState "level", label: 'Level ${currentValue}%'
+			}
+        }
 
-	main(["switch"])
-	details(["switch", "levelSliderControl", "refresh"])
+		standardTile("switch", "device.switch", width: 2, height: 2, canChangeIcon: true) {
+			state "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
+			state "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+			state "turningOn", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
+			state "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+        }
+
+        controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 2, inactiveLabel: false, range:"(0..100)") {
+            state "level", action:"switch level.setLevel"
+        }
+
+        standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+            state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
+        }
+
+        main(["switch"])
+        details(["rich-control", "refresh"])
+    }
 
 }
 
