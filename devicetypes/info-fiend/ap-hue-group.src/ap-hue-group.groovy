@@ -185,6 +185,22 @@ void setColorTemperature(colorTkelvin) {
 	log.debug "Executing 'setColorTemperature'"
 	parent.setGroupCT(this, colorTmireks, transitionTime)
 	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
+    sendEvent(name: "switch", value: "on", isStateChange: true)
+
+}
+
+void setColorTemperature(colorTkelvin, transitiontime) {
+    if(colorTkelvin == null)
+    {
+    	colorTkelvin = 2400
+    }
+        
+    def colorTmireks = kelvinToMireks(colorTkelvin)
+    
+	log.debug "Executing 'setColorTemperature'"
+	parent.setGroupCT(this, colorTmireks, transitiontime)
+	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
+    sendEvent(name: "switch", value: "on", isStateChange: true)
 
 }
 
@@ -298,9 +314,8 @@ void setColor(value) {
 		sendEvent(name: "level", value: value.level, isStateChange: true)
 	}
 	if (value.switch) 
-	{
-		sendEvent(name: "switch", value: value.switch, isStateChange: true)
-	}
+	
+	sendEvent(name: "switch", value: value.switch, isStateChange: true)
 	parent.setGroupColor(this, value)
 }
 

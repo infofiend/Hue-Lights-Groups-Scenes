@@ -181,9 +181,24 @@ void setColorTemperature(colorTkelvin) {
 	log.debug "Executing 'setColorTemperature'"
 	parent.setCT(this, colorTmireks, transitionTime)
 	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
+  	sendEvent(name: "switch", value: "on", isStateChange: true)
 
 }
 
+void setColorTemperature(colorTkelvin, transitiontime) {
+    if(colorTkelvin == null)
+    {
+    	colorTkelvin = 2400
+    }
+    
+    def colorTmireks = kelvinToMireks(colorTkelvin)
+    
+	log.debug "Executing 'setColorTemperature'"
+	parent.setCT(this, colorTmireks, transitiontime)
+	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
+  	sendEvent(name: "switch", value: "on", isStateChange: true)
+
+}
 
 void reset() {
 	log.debug "Executing 'reset'"
@@ -200,7 +215,7 @@ void nextLevel() {
 	else {
 		level = 25
 	}
-	setLevel(level)
+	setLevel(level)    
 }
 
 void setLevel(percent) {
@@ -322,10 +337,8 @@ void setColor(value) {
         value.transitiontime = 0
         isOff = true
     }
-	if (value.switch) 
-	{
-		sendEvent(name: "switch", value: value.switch, isStateChange: true)
-	}
+	
+	sendEvent(name: "switch", value: value.switch, isStateChange: true)
 
 	parent.setColor(this, value)
     if (isOff) 
