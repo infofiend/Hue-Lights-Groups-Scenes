@@ -13,6 +13,7 @@ metadata {
 		capability "Switch Level"
 		capability "Actuator"
 		capability "Color Control"
+        capability "Color Temperature"
 		capability "Switch"
 		capability "Polling"
 		capability "Refresh"
@@ -22,7 +23,7 @@ metadata {
 		command "setAdjustedColor"
         command "setTT"
         command "getGroupID"
-        command "setColorTemp"
+        command "setColorTemperature"
 		command "log", ["string","string"]        
         
 		attribute "groupID", "STRING"
@@ -63,8 +64,8 @@ metadata {
 			state "transTime", label: 'Transition    Time: ${currentValue}'
         }
         
-        controlTile("colorTemp", "device.colorTemp", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(153..500)") { 
-        	state "setCT", action:"setColorTemp", backgroundColor:"#54f832"
+        controlTile("colorTemp", "device.colorTemp", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(2000..6500)") { 
+        	state "setCT", action:"setColorTemperature", backgroundColor:"#54f832"
 		}
 		valueTile("valueCT", "device.colorTemp", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
 			state "colorTemp", label: ' ColorTemp:  ${currentValue}'
@@ -168,10 +169,10 @@ void poll() {
 }
 
 
-void setColorTemp(colorT) {
-    if(colorT == null)
+void setColorTemperature(colorTkelvin) {
+    if(colorTkelvin == null)
     {
-    	colorT = 300
+    	colorTkelvin = 2400
     }
     
     def transitionTime = device.currentValue("transTime")
@@ -179,9 +180,11 @@ void setColorTemp(colorT) {
     	transitionTime = 3
     }
     
-	log.debug "Executing 'setColorTemp'"
-	parent.setGroupCT(this, colorT, transitionTime)
-	sendEvent(name: "colorTemp", value: colorT, isStateChange: true)
+    def colorTmireks = kelvinToMireks(colorTkelvin)
+    
+	log.debug "Executing 'setColorTemperature'"
+	parent.setGroupCT(this, colorTmireks, transitionTime)
+	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
 
 }
 
@@ -324,6 +327,10 @@ void setAdjustedColor(value) {
         adjusted.level = device.currentValue("level") // null 
         setColor(adjusted)
     }
+}
+
+int kelvinToMireks(kelvin) {
+	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
 }
 
 def adjustOutgoingHue(percent) {
