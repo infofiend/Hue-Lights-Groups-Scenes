@@ -106,15 +106,13 @@ def parse(description) {
 void on() 
 {
 	def level = device.currentValue("level")
-    if(level == null)
-    {
+    if(level == null) {
     	level = 100
     }
 
 	def transitionTime = device.currentValue("transTime")
-    if(transitionTime == null)
-    {
-    	transitionTime = 3
+    if(transitionTime == null) {
+    	transitionTime = parent.getSelectedTransition()
     }
     
 //    log.debug this ": level = ${level} & tt= ${transitionTime}"
@@ -127,8 +125,7 @@ void on()
 void on(transitiontime)
 {
 	def level = device.currentValue("level")
-    if(level == null)
-    {
+    if(level == null) {
     	level = 100
     }
 	parent.on(this, transitiontime, level)
@@ -139,9 +136,8 @@ void on(transitiontime)
 void off() 
 {
 	def transitionTime = device.currentValue("transTime")
-    if(transitionTime == null)
-    {
-    	transitionTime = 3
+    if(transitionTime == null) {
+    	transitionTime = parent.getSelectedTransition()
     }
     
  //   log.debug this ": off & tt = ${transitionTime}"
@@ -166,17 +162,16 @@ void setTT(transitiontime) {
 }
 
 void setColorTemperature(colorTkelvin) {
-    if(colorTkelvin == null)
-    {
+    if(colorTkelvin == null) {
     	colorTkelvin = 2400
     }
     
     def transitionTime = device.currentValue("transTime")
     if(transitionTime == null) {
-    	transitionTime = 3
+    	transitionTime = parent.getSelectedTransition()
     }
     
-    def colorTmireks = kelvinToMireks(colorTkelvin)
+    def colorTmireks = parent.kelvinToMireks(colorTkelvin)
     
 	log.debug "Executing 'setColorTemperature'"
 	parent.setCT(this, colorTmireks, transitionTime)
@@ -186,12 +181,11 @@ void setColorTemperature(colorTkelvin) {
 }
 
 void setColorTemperature(colorTkelvin, transitiontime) {
-    if(colorTkelvin == null)
-    {
+    if(colorTkelvin == null) {
     	colorTkelvin = 2400
     }
     
-    def colorTmireks = kelvinToMireks(colorTkelvin)
+    def colorTmireks = parent.kelvinToMireks(colorTkelvin)
     
 	log.debug "Executing 'setColorTemperature'"
 	parent.setCT(this, colorTmireks, transitiontime)
@@ -220,13 +214,11 @@ void nextLevel() {
 
 void setLevel(percent) {
 	def transitionTime = device.currentValue("transTime")
-    if(transitionTime == null)
-    {
-    	transitionTime = 3
+    if(transitionTime == null) {
+    	transitionTime = parent.getSelectedTransition()
     }
         
-	if(device.latestValue("level") as Integer == 0)
-    (
+	if(device.latestValue("level") as Integer == 0) (
     	transitionTime = 0
     )
 	
@@ -251,9 +243,8 @@ void setLevel(percent, transitiontime) {
 void setSaturation(percent) 
 {
 	def transitionTime = device.currentValue("transTime")
-    if(transitionTime == null)
-    {
-    	transitionTime = 3
+    if(transitionTime == null) {
+    	transitionTime = parent.getSelectedTransition()
     }
     
  //   log.debug this ": tt= ${transitionTime}"
@@ -274,9 +265,8 @@ void setSaturation(percent, transitiontime)
 void setHue(percent) 
 {
 	def transitionTime = device.currentValue("transTime")
-    if(transitionTime == null)
-    {
-    	transitionTime = 3
+    if(transitionTime == null) {
+    	transitionTime = parent.getSelectedTransition()
     }
     
 //    log.debug this ": tt= ${transitionTime}"
@@ -307,9 +297,8 @@ void setColor(value) {
 	else
 	{
     	def transitionTime = device.currentValue("transTime")
-	    if(transitionTime == null)
-    	{
-    		transitionTime = 3
+	    if(transitionTime == null) {
+    		transitionTime = parent.getSelectedTransition()
 	    }
     
 //    	log.debug this ": tt= ${transitionTime}"
@@ -357,10 +346,6 @@ void setAdjustedColor(value) {
         adjusted.level = device.currentValue("level") // null 
         setColor(adjusted)
     }
-}
-
-int kelvinToMireks(kelvin) {
-	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
 }
 
 def adjustOutgoingHue(percent) {
