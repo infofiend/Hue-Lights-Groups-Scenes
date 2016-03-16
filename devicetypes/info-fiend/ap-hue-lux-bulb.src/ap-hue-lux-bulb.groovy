@@ -91,6 +91,11 @@ def parse(description) {
 }
 
 // handle commands
+void setTT(transitiontime) {
+	log.debug "Executing 'setTT': transition time is now ${transitiontime}."
+	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
+}
+
 void on() {
 	def level = device.currentValue("level")
     if(level == null) {
@@ -133,15 +138,6 @@ void off(transitiontime) {
 	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
 
-void setTT(transitiontime) {
-	log.debug "Executing 'setTT': transition time is now ${transitiontime}."
-	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
-}
-
-def poll() {
-	parent.poll()
-}
-
 def setLevel(percent) {
 	def transitionTime = device.currentValue("transTime")
     if(transitionTime == null) {
@@ -159,6 +155,7 @@ def setLevel(percent) {
     sendEvent(name: "switch", value: "on", isStateChange: true)
 
 }
+
 def setLevel(percent, transitiontime) {
 	log.debug "Executing 'setLevel'"
 	parent.setLevel(this, percent, transitiontime)
@@ -167,13 +164,17 @@ def setLevel(percent, transitiontime) {
     sendEvent(name: "switch", value: "on", isStateChange: true)
 }
 
-def save() {
-	log.debug "Executing 'save'"
-}
-
 def refresh() {
 	log.debug "Executing 'refresh'"
 	parent.poll()
+}
+
+def poll() {
+	parent.poll()
+}
+
+def save() {
+	log.debug "Executing 'save'"
 }
 
 def log(message, level = "trace") {
