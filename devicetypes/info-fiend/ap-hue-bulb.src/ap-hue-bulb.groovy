@@ -41,10 +41,10 @@ metadata {
 	tiles (scale: 2){
 		multiAttributeTile(name:"rich-control", type: "lighting", width: 6, height: 4, canChangeIcon: true){
 			tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
-				attributeState "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
-				attributeState "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
-				attributeState "turningOn", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
-				attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+				attributeState "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#00A0DC", nextState:"turningOff"
+				attributeState "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#C6C7CC", nextState:"turningOn"
+				attributeState "turningOn", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#00A0DC", nextState:"turningOff"
+				attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#C6C7CC", nextState:"turningOn"
 			}
 			tileAttribute ("device.level", key: "SLIDER_CONTROL") {
 				attributeState "level", action:"switch level.setLevel", range:"(0..100)"
@@ -57,13 +57,6 @@ metadata {
 			}
 		}
 
-		standardTile("switch", "device.switch", width: 2, height: 2, canChangeIcon: true) {
-			state "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
-			state "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
-			state "turningOn", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
-			state "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
-		}
-
 	        controlTile("colorTempSliderControl", "device.colorTemperature", "slider", width: 4, height: 2, inactiveLabel: false, range:"(2000..6500)") {
 	            state "colorTemperature", action:"color temperature.setColorTemperature"
 	        }
@@ -73,26 +66,8 @@ metadata {
 		standardTile("reset", "device.reset", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "default", label:"Reset Color", action:"reset", icon:"st.lights.philips.hue-single"
 		}
-		standardTile("refresh", "device.switch", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
+		standardTile("refresh", "device.refresh", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
-		}
-		controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 2, inactiveLabel: false, range:"(0..100)") {
-			state "level", action:"switch level.setLevel"
-		}
-		valueTile("level", "device.level", inactiveLabel: false, decoration: "flat") {
-			state "level", label: 'Level ${currentValue}%'
-		}
-		controlTile("saturationSliderControl", "device.saturation", "slider", height: 1, width: 2, inactiveLabel: false) {
-			state "saturation", action:"color control.setSaturation"
-		}
-		valueTile("saturation", "device.saturation", inactiveLabel: false, decoration: "flat") {
-			state "saturation", label: 'Sat ${currentValue}    '
-		}
-		controlTile("hueSliderControl", "device.hue", "slider", height: 1, width: 2, inactiveLabel: false) {
-			state "hue", action:"color control.setHue"
-		}
-		valueTile("hue", "device.hue", inactiveLabel: false, decoration: "flat") {
-			state "hue", label: 'Hue ${currentValue}   '
 		}
         
 	        controlTile("transitiontime", "device.transTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") { 
@@ -104,8 +79,8 @@ metadata {
 
 	}
 
-	main(["switch"])
-	details(["rich-control", "levelSliderControl", "rgbSelector", "colorTempSliderControl", "colorTemp", "transitiontime", "valueTT", "refresh", "reset"])
+	main(["rich-control"])
+	details(["rich-control", "colorTempSliderControl", "colorTemp", "transitiontime", "valueTT", "refresh", "reset"])
 }
 
 
@@ -217,7 +192,7 @@ void setLevel(percent) {
 	
 	log.debug "Executing 'setLevel'"
 	parent.setLevel(this, percent, transitionTime)
-	sendEvent(name: "level", value: percent)
+	sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%")
 	sendEvent(name: "transTime", value: transitionTime)
     sendEvent(name: "switch", value: "on", isStateChange: true)
 
@@ -227,7 +202,7 @@ void setLevel(percent, transitiontime) {
 	
 	log.debug "Executing 'setLevel'"
 	parent.setLevel(this, percent, transitiontime)
-	sendEvent(name: "level", value: percent)
+	sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%")
 	sendEvent(name: "transTime", value: transitiontime)
     sendEvent(name: "switch", value: "on", isStateChange: true)
 
@@ -244,7 +219,7 @@ void setSaturation(percent)
  //   log.debug this ": tt= ${transitionTime}"
 	log.debug "Executing 'setSaturation'"
 	parent.setSaturation(this, percent, transitionTime)
-	sendEvent(name: "saturation", value: percent)
+	sendEvent(name: "saturation", value: percent, displayed: false)
 	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
 
@@ -252,7 +227,7 @@ void setSaturation(percent, transitiontime)
 {
 	log.debug "Executing 'setSaturation'"
 	parent.setSaturation(this, percent, transitiontime)
-	sendEvent(name: "saturation", value: percent)
+	sendEvent(name: "saturation", value: percent, displayed: false)
 	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
 
@@ -268,7 +243,7 @@ void setHue(percent)
     
 	log.debug "Executing 'setHue'"
 	parent.setHue(this, percent, transitionTime)
-	sendEvent(name: "hue", value: percent)
+	sendEvent(name: "hue", value: percent, displayed: false)
 	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
 
@@ -276,7 +251,7 @@ void setHue(percent, transitiontime)
 {
 	log.debug "Executing 'setHue'"
 	parent.setHue(this, percent, transitiontime)
-	sendEvent(name: "hue", value: percent)
+	sendEvent(name: "hue", value: percent, displayed: false)
 	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
 
@@ -313,7 +288,7 @@ void setColor(value) {
 
 	if (value.level) 
 	{
-		sendEvent(name: "level", value: value.level, isStateChange: true)
+		sendEvent(name: "level", value: value.level, descriptionText: "Level has changed to ${value.level}%", isStateChange: true)
 	}
     else
     {
