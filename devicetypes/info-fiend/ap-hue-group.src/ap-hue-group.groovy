@@ -332,7 +332,7 @@ void setAdjustedColor(value) {
     }
 }
 
-def refresh() {
+void refresh() {
 	log.debug "Executing 'refresh'"
 	parent.poll()
     
