@@ -1025,15 +1025,17 @@ def setGroupColor(childDevice, color) {
 	put("groups/${getId(childDevice)}/action", value)
 }
 
-def setCT(childDevice, cTemp, transitiontime) {
-	log.debug "Executing 'setCT'"
-	def value = [ct: cTemp, transitiontime: transitiontime * 10]
+def setColorTemperature(childDevice, huesettings, transitiontime) {
+	log.debug "Executing 'setColorTemperature($huesettings)'"
+	def value = [ct: huesettings, transitiontime: transitiontime * 10]
+	log.trace "sending command $value"
 	put("lights/${getId(childDevice)}/state", value)
 }
 
-def setGroupCT(childDevice, cTemp, transitiontime) {
-	log.debug "Executing 'setCT'"
-	def value = [ct: cTemp, transitiontime: transitiontime * 10]
+def setGroupColorTemperature(childDevice, huesettings, transitiontime) {
+	log.debug "Executing 'setColorTemperature($huesettings)'"
+	def value = [ct: huesettings, transitiontime: transitiontime * 10]
+	log.trace "sending command $value"
 	put("groups/${getId(childDevice)}/action", value)
 }
 
