@@ -614,7 +614,7 @@ def locationHandler(evt) {
 				}
 			}
 		}
-		else if(type?.contains("json"))
+		else if(type?.contains("json") && isValidSource(parsedEvent.mac))
 		{ //(application/json)
 			body = new groovy.json.JsonSlurper().parseText(bodyString)
 
@@ -757,6 +757,11 @@ def doDeviceSync(){
 
 	discoverBridges()
     poll()
+}
+
+def isValidSource(macAddress) {
+	def vbridges = getVerifiedHueBridges()
+	return (vbridges?.find {"${it.value.mac}" == macAddress}) != null
 }
 
 
