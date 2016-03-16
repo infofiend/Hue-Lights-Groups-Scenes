@@ -340,7 +340,7 @@ void setColorTemperature(colorTkelvin) {
     def colorTmireks = kelvinToMireks(colorTkelvin)
     
 	log.debug "Executing 'setColorTemperature'"
-	parent.setCT(this, colorTmireks, transitionTime)
+	parent.setColorTemperature(this, colorTmireks, transitionTime)
 	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
   	sendEvent(name: "switch", value: "on", isStateChange: true)
 
@@ -355,7 +355,7 @@ void setColorTemperature(colorTkelvin, transitiontime) {
     def colorTmireks = kelvinToMireks(colorTkelvin)
     
 	log.debug "Executing 'setColorTemperature'"
-	parent.setCT(this, colorTmireks, transitiontime)
+	parent.setColorTemperature(this, colorTmireks, transitiontime)
 	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
   	sendEvent(name: "switch", value: "on", isStateChange: true)
 
