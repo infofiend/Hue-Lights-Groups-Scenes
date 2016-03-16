@@ -138,7 +138,7 @@ void off(transitiontime) {
 	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
 
-def setLevel(percent) {
+void setLevel(percent) {
 	def transitionTime = device.currentValue("transTime")
     if(transitionTime == null) {
     	transitionTime = 3
@@ -156,7 +156,7 @@ def setLevel(percent) {
 
 }
 
-def setLevel(percent, transitiontime) {
+void setLevel(percent, transitiontime) {
 	log.debug "Executing 'setLevel'"
 	parent.setLevel(this, percent, transitiontime)
 	sendEvent(name: "level", value: percent)
@@ -164,7 +164,7 @@ def setLevel(percent, transitiontime) {
     sendEvent(name: "switch", value: "on", isStateChange: true)
 }
 
-def refresh() {
+void refresh() {
 	log.debug "Executing 'refresh'"
 	parent.poll()
 }
