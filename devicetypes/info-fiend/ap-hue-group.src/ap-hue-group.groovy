@@ -114,7 +114,6 @@ void setTT(transitiontime) {
     
 }
 
-
 void on() 
 {
 	def level = device.currentValue("level")
@@ -164,46 +163,6 @@ void off(transitiontime)
 	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
 
-void poll() {
-	parent.poll()
-}
-
-
-void setColorTemperature(colorTkelvin) {
-    if(colorTkelvin == null)
-    {
-    	colorTkelvin = 2400
-    }
-    
-    def transitionTime = device.currentValue("transTime")
-    if(transitionTime == null) {
-    	transitionTime = 3
-    }
-    
-    def colorTmireks = kelvinToMireks(colorTkelvin)
-    
-	log.debug "Executing 'setColorTemperature'"
-	parent.setGroupCT(this, colorTmireks, transitionTime)
-	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
-    sendEvent(name: "switch", value: "on", isStateChange: true)
-
-}
-
-void setColorTemperature(colorTkelvin, transitiontime) {
-    if(colorTkelvin == null)
-    {
-    	colorTkelvin = 2400
-    }
-        
-    def colorTmireks = kelvinToMireks(colorTkelvin)
-    
-	log.debug "Executing 'setColorTemperature'"
-	parent.setGroupCT(this, colorTmireks, transitiontime)
-	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
-    sendEvent(name: "switch", value: "on", isStateChange: true)
-
-}
-
 void nextLevel() {
 	def level = device.latestValue("level") as Integer ?: 0
 	if (level < 100) {
@@ -248,6 +207,7 @@ void setSaturation(percent)
 	sendEvent(name: "saturation", value: percent)
 	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
+
 void setSaturation(percent, transitiontime) 
 {
 	log.debug "Executing 'setSaturation'"
@@ -319,11 +279,39 @@ void setColor(value) {
 	parent.setGroupColor(this, value)
 }
 
-
-def refresh() {
-	log.debug "Executing 'refresh'"
-	parent.poll()
+void setColorTemperature(colorTkelvin) {
+    if(colorTkelvin == null)
+    {
+    	colorTkelvin = 2400
+    }
     
+    def transitionTime = device.currentValue("transTime")
+    if(transitionTime == null) {
+    	transitionTime = 3
+    }
+    
+    def colorTmireks = kelvinToMireks(colorTkelvin)
+    
+	log.debug "Executing 'setColorTemperature'"
+	parent.setGroupCT(this, colorTmireks, transitionTime)
+	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
+    sendEvent(name: "switch", value: "on", isStateChange: true)
+
+}
+
+void setColorTemperature(colorTkelvin, transitiontime) {
+    if(colorTkelvin == null)
+    {
+    	colorTkelvin = 2400
+    }
+        
+    def colorTmireks = kelvinToMireks(colorTkelvin)
+    
+	log.debug "Executing 'setColorTemperature'"
+	parent.setGroupCT(this, colorTmireks, transitiontime)
+	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
+    sendEvent(name: "switch", value: "on", isStateChange: true)
+
 }
 
 void reset() {
@@ -344,8 +332,10 @@ void setAdjustedColor(value) {
     }
 }
 
-int kelvinToMireks(kelvin) {
-	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
+def refresh() {
+	log.debug "Executing 'refresh'"
+	parent.poll()
+    
 }
 
 def adjustOutgoingHue(percent) {
@@ -400,4 +390,12 @@ def log(message, level = "trace") {
     }            
     
     return null // always child interface call with a return value
+}
+
+void poll() {
+	parent.poll()
+}
+
+int kelvinToMireks(kelvin) {
+	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
 }
