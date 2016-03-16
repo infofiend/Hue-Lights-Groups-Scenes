@@ -363,6 +363,11 @@ int kelvinToMireks(kelvin) {
 	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
 }
 
+def refresh() {
+	log.debug "Executing 'refresh'"
+	parent.manualRefresh()
+}
+
 def adjustOutgoingHue(percent) {
 	def adjusted = percent
 	if (percent > 31) {
