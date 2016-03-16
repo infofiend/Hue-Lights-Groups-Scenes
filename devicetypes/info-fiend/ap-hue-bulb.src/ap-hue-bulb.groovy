@@ -47,38 +47,65 @@ metadata {
 				attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
 			}
 			tileAttribute ("device.level", key: "SLIDER_CONTROL") {
-				attributeState "level", action:"switch level.setLevel"
+				attributeState "level", action:"switch level.setLevel", range:"(0..100)"
 			}
+			tileAttribute ("device.level", key: "SECONDARY_CONTROL") {
+ 				attributeState "level", label: 'Level ${currentValue}%'
+  			}
 			tileAttribute ("device.color", key: "COLOR_CONTROL") {
 				attributeState "color", action:"setAdjustedColor"
 			}
 		}
 
-		standardTile("reset", "device.reset", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+		standardTile("switch", "device.switch", width: 2, height: 2, canChangeIcon: true) {
+			state "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
+			state "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+			state "turningOn", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
+			state "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+		}
+
+	        controlTile("colorTempSliderControl", "device.colorTemperature", "slider", width: 4, height: 2, inactiveLabel: false, range:"(2000..6500)") {
+	            state "colorTemperature", action:"color temperature.setColorTemperature"
+	        }
+	        valueTile("colorTemp", "device.colorTemperature", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+	            state "colorTemperature", label: '${currentValue} K'
+	        }
+		standardTile("reset", "device.reset", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "default", label:"Reset Color", action:"reset", icon:"st.lights.philips.hue-single"
 		}
-		standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+		standardTile("refresh", "device.switch", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
 		}
+		controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 2, inactiveLabel: false, range:"(0..100)") {
+			state "level", action:"switch level.setLevel"
+		}
+		valueTile("level", "device.level", inactiveLabel: false, decoration: "flat") {
+			state "level", label: 'Level ${currentValue}%'
+		}
+		controlTile("saturationSliderControl", "device.saturation", "slider", height: 1, width: 2, inactiveLabel: false) {
+			state "saturation", action:"color control.setSaturation"
+		}
+		valueTile("saturation", "device.saturation", inactiveLabel: false, decoration: "flat") {
+			state "saturation", label: 'Sat ${currentValue}    '
+		}
+		controlTile("hueSliderControl", "device.hue", "slider", height: 1, width: 2, inactiveLabel: false) {
+			state "hue", action:"color control.setHue"
+		}
+		valueTile("hue", "device.hue", inactiveLabel: false, decoration: "flat") {
+			state "hue", label: 'Hue ${currentValue}   '
+		}
         
-        controlTile("transitiontime", "device.transTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") { 
-        	state "setTT", action:"setTT", backgroundColor:"#d04e00"
+	        controlTile("transitiontime", "device.transTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") { 
+        		state "setTT", action:"setTT", backgroundColor:"#d04e00"
 		}
 		valueTile("valueTT", "device.transTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
 			state "transTime", label: 'Transition    Time: ${currentValue}'
-        }
-        
-        controlTile("colorTemp", "device.colorTemp", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(2000..6500)") { 
-        	state "setCT", action:"setColorTemperature", backgroundColor:"#54f832"
-		}
-		valueTile("valueCT", "device.colorTemp", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
-			state "colorTemp", label: ' ColorTemp:  ${currentValue}'
-        }
+	        }
 
 	}
 
 	main(["switch"])
-	details(["switch", "transitiontime","valueTT","colorTemp","valueCT","refresh", "reset"])
+	details(["rich-control", "levelSliderControl", "rgbSelector", "colorTempSliderControl", "colorTemp", "transitiontime", "valueTT", "refresh", "reset"])
 }
 
 
@@ -306,6 +333,24 @@ void setColor(value) {
     
 }
 
+void reset() {
+	log.debug "Executing 'reset'"
+    def value = [level:100, hex:"#90C638", saturation:56, hue:23]
+    setAdjustedColor(value)
+	parent.poll()
+}
+
+void setAdjustedColor(value) {
+	if (value) {
+        log.trace "setAdjustedColor: ${value}"
+        def adjusted = value + [:]
+        adjusted.hue = adjustOutgoingHue(value.hue)
+        // Needed because color picker always sends 100
+        adjusted.level = device.currentValue("level") // null 
+        setColor(adjusted)
+    }
+}
+
 void setColorTemperature(colorTkelvin) {
     if(colorTkelvin == null)
     {
@@ -339,24 +384,6 @@ void setColorTemperature(colorTkelvin, transitiontime) {
 	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
   	sendEvent(name: "switch", value: "on", isStateChange: true)
 
-}
-
-void reset() {
-	log.debug "Executing 'reset'"
-    def value = [level:100, hex:"#90C638", saturation:56, hue:23]
-    setAdjustedColor(value)
-	parent.poll()
-}
-
-void setAdjustedColor(value) {
-	if (value) {
-        log.trace "setAdjustedColor: ${value}"
-        def adjusted = value + [:]
-        adjusted.hue = adjustOutgoingHue(value.hue)
-        // Needed because color picker always sends 100
-        adjusted.level = device.currentValue("level") // null 
-        setColor(adjusted)
-    }
 }
 
 void refresh() {
