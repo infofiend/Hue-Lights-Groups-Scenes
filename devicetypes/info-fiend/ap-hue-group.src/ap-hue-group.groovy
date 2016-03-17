@@ -36,54 +36,55 @@ metadata {
 	}
 
 	tiles (scale: 2){
-		multiAttributeTile(name:"switch", type: "lighting", width: 6, height: 4, canChangeIcon: true){
+		multiAttributeTile(name:"rich-control", type: "lighting", width: 6, height: 4, canChangeIcon: true){
 			tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
-				attributeState "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
-				attributeState "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
-				attributeState "turningOn", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
-				attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+				attributeState "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#00A0DC", nextState:"turningOff"
+				attributeState "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#C6C7CC", nextState:"turningOn"
+				attributeState "turningOn", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#00A0DC", nextState:"turningOff"
+				attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#C6C7CC", nextState:"turningOn"
 			}
 			tileAttribute ("device.level", key: "SLIDER_CONTROL") {
-				attributeState "level", action:"switch level.setLevel"
+				attributeState "level", action:"switch level.setLevel", range:"(0..100)"
 			}
+			tileAttribute ("device.level", key: "SECONDARY_CONTROL") {
+ 				attributeState "level", label: 'Level ${currentValue}%'
+  			}
 			tileAttribute ("device.color", key: "COLOR_CONTROL") {
 				attributeState "color", action:"setAdjustedColor"
 			}
 		}
 
-		standardTile("reset", "device.reset", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+	        controlTile("colorTempSliderControl", "device.colorTemperature", "slider", width: 4, height: 2, inactiveLabel: false, range:"(2000..6500)") {
+	            state "colorTemperature", action:"color temperature.setColorTemperature"
+	        }
+	        valueTile("colorTemp", "device.colorTemperature", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+	            state "colorTemperature", label: '${currentValue} K'
+	        }
+		standardTile("reset", "device.reset", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "default", label:"Reset Color", action:"reset", icon:"st.lights.philips.hue-single"
 		}
-		standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+		standardTile("refresh", "device.refresh", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
 		}
-        controlTile("transitiontime", "device.transTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") { 
-        	state "setTT", action:"setTT", backgroundColor:"#d04e00"
+		
+		controlTile("transitiontime", "device.transTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") { 
+        		state "setTT", action:"setTT", backgroundColor:"#d04e00"
 		}
 		valueTile("valueTT", "device.transTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
 			state "transTime", label: 'Transition    Time: ${currentValue}'
-        }
-        
-        controlTile("colorTemp", "device.colorTemp", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(2000..6500)") { 
-        	state "setCT", action:"setColorTemperature", backgroundColor:"#54f832"
-		}
-		valueTile("valueCT", "device.colorTemp", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
-			state "colorTemp", label: ' ColorTemp:  ${currentValue}'
-        }
-        
-        // decoration: "flat", width: 2, height: 2) {	state "transitiontime", label: 'Transition    Time: ${currentValue}' }
+        	}
 
 		valueTile("groupID", "device.groupID", inactiveLabel: false, decoration: "flat") {
 			state "groupID", label: 'groupID ${currentValue}   '
 		}
 		standardTile("getGroupID", "device.getGroupID", inactiveLabel: false, decoration: "flat", defaultState: "Ready") {
-       		state "Normal", label: 'Get groupID', action:"switch groupID.getGroupID", backgroundColor:"#BDE5F2", nextState: "Retrieving"
-	    	state "Retrieving", label: 'Retrieving', backgroundColor: "#ffffff", nextState: "Normal"
-    	}
+       			state "Normal", label: 'Get groupID', action:"switch groupID.getGroupID", backgroundColor:"#BDE5F2", nextState: "Retrieving"
+	    		state "Retrieving", label: 'Retrieving', backgroundColor: "#ffffff", nextState: "Normal"
+    		}
 
 	}
-	main(["switch"])
-	details(["switch", "transitiontime","valueTT","colorTemp","valueCT","refresh", "reset","groupID","getGroupID"])
+	main(["rich-control"])
+	details(["rich-control", "colorTempSliderControl", "colorTemp", "transitiontime", "valueTT", "refresh", "reset", "groupID", "getGroupID"])
 
 }
 
@@ -113,7 +114,6 @@ void setTT(transitiontime) {
 	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
     
 }
-
 
 void on() 
 {
@@ -164,46 +164,6 @@ void off(transitiontime)
 	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
 
-void poll() {
-	parent.poll()
-}
-
-
-void setColorTemperature(colorTkelvin) {
-    if(colorTkelvin == null)
-    {
-    	colorTkelvin = 2400
-    }
-    
-    def transitionTime = device.currentValue("transTime")
-    if(transitionTime == null) {
-    	transitionTime = 3
-    }
-    
-    def colorTmireks = kelvinToMireks(colorTkelvin)
-    
-	log.debug "Executing 'setColorTemperature'"
-	parent.setGroupCT(this, colorTmireks, transitionTime)
-	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
-    sendEvent(name: "switch", value: "on", isStateChange: true)
-
-}
-
-void setColorTemperature(colorTkelvin, transitiontime) {
-    if(colorTkelvin == null)
-    {
-    	colorTkelvin = 2400
-    }
-        
-    def colorTmireks = kelvinToMireks(colorTkelvin)
-    
-	log.debug "Executing 'setColorTemperature'"
-	parent.setGroupCT(this, colorTmireks, transitiontime)
-	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
-    sendEvent(name: "switch", value: "on", isStateChange: true)
-
-}
-
 void nextLevel() {
 	def level = device.latestValue("level") as Integer ?: 0
 	if (level < 100) {
@@ -224,7 +184,7 @@ void setLevel(percent)
     }
 	log.debug "Executing 'setLevel'"
 	parent.setGroupLevel(this, percent, transitionTime)
-	sendEvent(name: "level", value: percent)
+	sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%")
 	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 
 }
@@ -232,7 +192,7 @@ void setLevel(percent, transitiontime)
 {
 	log.debug "Executing 'setLevel'"
 	parent.setGroupLevel(this, percent, transitiontime)
-	sendEvent(name: "level", value: percent)
+	sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%")
 	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
 
@@ -245,14 +205,15 @@ void setSaturation(percent)
     }
 	log.debug "Executing 'setSaturation'"
 	parent.setGroupSaturation(this, percent, transitionTime)
-	sendEvent(name: "saturation", value: percent)
+	sendEvent(name: "saturation", value: percent, displayed: false)
 	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
+
 void setSaturation(percent, transitiontime) 
 {
 	log.debug "Executing 'setSaturation'"
 	parent.setGroupSaturation(this, percent, transitiontime)
-	sendEvent(name: "saturation", value: percent)
+	sendEvent(name: "saturation", value: percent, displayed: false)
 	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
 
@@ -265,7 +226,7 @@ void setHue(percent)
     }
 	log.debug "Executing 'setHue'"
 	parent.setGroupHue(this, percent, transitionTime)
-	sendEvent(name: "hue", value: percent)
+	sendEvent(name: "hue", value: percent, displayed: false)
 	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
 
@@ -273,7 +234,7 @@ void setHue(percent, transitiontime)
 {
 	log.debug "Executing 'setHue'"
 	parent.setGroupHue(this, percent, transitiontime)
-	sendEvent(name: "hue", value: percent)
+	sendEvent(name: "hue", value: percent, displayed: false)
 	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
 
@@ -311,19 +272,12 @@ void setColor(value) {
 	}
 	if (value.level) 
 	{
-		sendEvent(name: "level", value: value.level, isStateChange: true)
+		sendEvent(name: "level", value: value.level, descriptionText: "Level has changed to ${value.level}%", isStateChange: true)
 	}
 	if (value.switch) 
 	
 	sendEvent(name: "switch", value: value.switch, isStateChange: true)
 	parent.setGroupColor(this, value)
-}
-
-
-def refresh() {
-	log.debug "Executing 'refresh'"
-	parent.poll()
-    
 }
 
 void reset() {
@@ -344,8 +298,45 @@ void setAdjustedColor(value) {
     }
 }
 
-int kelvinToMireks(kelvin) {
-	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
+void setColorTemperature(colorTkelvin) {
+    if(colorTkelvin == null)
+    {
+    	colorTkelvin = 2400
+    }
+    
+    def transitionTime = device.currentValue("transTime")
+    if(transitionTime == null) {
+    	transitionTime = 3
+    }
+    
+    def colorTmireks = kelvinToMireks(colorTkelvin)
+    
+	log.debug "Executing 'setColorTemperature'"
+	parent.setGroupColorTemperature(this, colorTmireks, transitionTime)
+	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
+    sendEvent(name: "switch", value: "on", isStateChange: true)
+
+}
+
+void setColorTemperature(colorTkelvin, transitiontime) {
+    if(colorTkelvin == null)
+    {
+    	colorTkelvin = 2400
+    }
+        
+    def colorTmireks = kelvinToMireks(colorTkelvin)
+    
+	log.debug "Executing 'setColorTemperature'"
+	parent.setGroupColorTemperature(this, colorTmireks, transitiontime)
+	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
+    sendEvent(name: "switch", value: "on", isStateChange: true)
+
+}
+
+void refresh() {
+	log.debug "Executing 'refresh'"
+	parent.poll()
+    
 }
 
 def adjustOutgoingHue(percent) {
@@ -400,4 +391,12 @@ def log(message, level = "trace") {
     }            
     
     return null // always child interface call with a return value
+}
+
+void poll() {
+	parent.poll()
+}
+
+int kelvinToMireks(kelvin) {
+	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
 }
