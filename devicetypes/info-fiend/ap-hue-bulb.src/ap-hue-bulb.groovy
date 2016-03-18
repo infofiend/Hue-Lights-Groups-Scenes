@@ -30,7 +30,7 @@ metadata {
 		command "log", ["string","string"]        
         
         attribute "transTime", "NUMBER"
-        attribute "colorTemp", "NUMBER"
+        attribute "colorTemperature", "NUMBER"
         
 	}
 
@@ -68,17 +68,17 @@ metadata {
 			state "transTime", label: 'Transition    Time: ${currentValue}'
         }
         
-        controlTile("colorTemp", "device.colorTemp", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(2000..6500)") { 
+        controlTile("colorTemperature", "device.colorTemperature", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(2000..6500)") { 
         	state "setCT", action:"setColorTemperature", backgroundColor:"#54f832"
 		}
-		valueTile("valueCT", "device.colorTemp", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
-			state "colorTemp", label: ' ColorTemp:  ${currentValue}'
+		valueTile("valueCT", "device.colorTemperature", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+			state "colorTemperature", label: ' ColorTemp:  ${currentValue}'
         }
 
 	}
 
 	main(["switch"])
-	details(["switch", "transitiontime","valueTT","colorTemp","valueCT","refresh", "reset"])
+	details(["switch", "transitiontime","valueTT","colorTemperature","valueCT","refresh", "reset"])
 }
 
 
@@ -175,7 +175,7 @@ void setColorTemperature(colorTkelvin) {
     
 	log.debug "Executing 'setColorTemperature'"
 	parent.setCT(this, colorTmireks, transitionTime)
-	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
+	sendEvent(name: "colorTemperature", value: colorTkelvin, isStateChange: true)
   	sendEvent(name: "switch", value: "on", isStateChange: true)
 
 }
@@ -189,7 +189,7 @@ void setColorTemperature(colorTkelvin, transitiontime) {
     
 	log.debug "Executing 'setColorTemperature'"
 	parent.setCT(this, colorTmireks, transitiontime)
-	sendEvent(name: "colorTemp", value: colorTkelvin, isStateChange: true)
+	sendEvent(name: "colorTemperature", value: colorTkelvin, isStateChange: true)
   	sendEvent(name: "switch", value: "on", isStateChange: true)
 
 }
