@@ -99,7 +99,7 @@ void on() {
     
 	def transitionTime = device.currentValue("transTime")
     if(transitionTime == null) {
-    	transitionTime = 3
+    	transitionTime = parent.getSelectedTransition()
     }
 	parent.on(this, transitionTime, level)
 	sendEvent(name: "switch", value: "on")
@@ -119,7 +119,7 @@ void on(transitiontime){
 void off() {
 	def transitionTime = device.currentValue("transTime")
     if(transitionTime == null) {
-    	transitionTime = 3
+    	transitionTime = parent.getSelectedTransition()
     }
     
 	parent.off(this, transitionTime)
@@ -145,7 +145,7 @@ def poll() {
 def setLevel(percent) {
 	def transitionTime = device.currentValue("transTime")
     if(transitionTime == null) {
-    	transitionTime = 3
+    	transitionTime = parent.getSelectedTransition()
     }
     
     if(device.latestValue("level") as Integer == 0) (

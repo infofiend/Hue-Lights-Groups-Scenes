@@ -25,6 +25,7 @@ preferences {
 	page(name:"bulbDiscovery", title:"Bulb Discovery", content:"bulbDiscovery", refreshTimeout:5)
 	page(name:"groupDiscovery", title:"Group Discovery", content:"groupDiscovery", refreshTimeout:5)        
 	page(name:"sceneDiscovery", title:"Scene Discovery", content:"sceneDiscovery", refreshTimeout:5)
+    page(name:"defaultTransition", title:"Default Transition", content:"defaultTransition", refreshTimeout:5)
 }
 
 def mainPage() {
@@ -187,7 +188,7 @@ def sceneDiscovery()
         log.debug "END HUE SCENE DISCOVERY"
 	}
 
-	return dynamicPage(name:"sceneDiscovery", title:"Scene Discovery Started!", nextPage:"", refreshInterval:refreshInterval, install:true, uninstall: true) {
+	return dynamicPage(name:"sceneDiscovery", title:"Scene Discovery Started!", nextPage:"defaultTransition", refreshInterval:refreshInterval, uninstall: true) {
 		section("Please wait while we discover your Hue Scenes. Discovery can take a few minutes, so sit back and relax! Select your device below once discovered.") {
 			input "selectedScenes", "enum", required:false, title:"Select Hue Scenes (${numFoundScenes} found)", multiple:true, options:optionsScenes
 		}
@@ -199,7 +200,26 @@ def sceneDiscovery()
 	}
 }
 
+def defaultTransition()
+{
+	int sceneRefreshCount = !state.sceneRefreshCount ? 0 : state.sceneRefreshCount as int
+	state.sceneRefreshCount = sceneRefreshCount + 1
+	def refreshInterval = 3
 
+	return dynamicPage(name:"defaultTransition", title:"Default Transition", nextPage:"", refreshInterval:refreshInterval, install:true, uninstall: true) {
+		section("Choose how long bulbs should take to transition between on/off and color changes. This can be modified per-device.") {
+			input "selectedTransition", "number", required:true, title:"Transition Time (seconds)", value: 1
+		}
+	}
+}
+
+def getSelectedTransition() {
+	return settings.selectedTransition
+}
+
+int kelvinToMireks(kelvin) {
+	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
+}
 
 private discoverBridges() {
 	sendHubCommand(new physicalgraph.device.HubAction("lan discovery urn:schemas-upnp-org:device:basic:1", physicalgraph.device.Protocol.LAN))
