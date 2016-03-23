@@ -1,7 +1,7 @@
 /**
  *  AP Hue Bridge
  *
- *  Author: Anthony Pastor
+ *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
  */
 // for the UI
 metadata {
