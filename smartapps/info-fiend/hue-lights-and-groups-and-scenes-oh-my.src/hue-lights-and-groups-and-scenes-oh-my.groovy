@@ -26,23 +26,11 @@ preferences {
 }
 
 def mainPage() {
-	if(canInstallLabs()) {
-		def bridges = bridgesDiscovered()
-		if (state.username && bridges) {
-			return bulbDiscovery()
-		} else {
-			return bridgeDiscovery()
-		}
+	def bridges = bridgesDiscovered()
+	if (state.username && bridges) {
+		return bulbDiscovery()
 	} else {
-		def upgradeNeeded = """To use SmartThings Labs, your Hub should be completely up to date.
-
-To update your Hub, access Location Settings in the Main Menu (tap the gear next to your location name), select your Hub, and choose "Update Hub"."""
-
-		return dynamicPage(name:"bridgeDiscovery", title:"Upgrade needed!", nextPage:"", install:false, uninstall: true) {
-			section("Upgrade") {
-				paragraph "$upgradeNeeded"
-			}
-		}
+		return bridgeDiscovery()
 	}
 }
 
@@ -1315,11 +1303,6 @@ private String convertHexToIP(hex) {
 	[convertHexToInt(hex[0..1]),convertHexToInt(hex[2..3]),convertHexToInt(hex[4..5]),convertHexToInt(hex[6..7])].join(".")
 }
 
-private Boolean canInstallLabs()
-{
-	return hasAllHubsOver("000.011.00603")
-}
-
 private Boolean hasAllHubsOver(String desiredFirmware)
 {
 	return realHubFirmwareVersions.every { fw -> fw >= desiredFirmware }
@@ -1346,6 +1329,3 @@ def getSelectedTransition() {
 int kelvinToMireks(kelvin) {
 	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
 }
-
-
-
