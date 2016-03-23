@@ -1,10 +1,7 @@
 /**
  *  Hue Lights and Groups and Scenes (OH MY) - new Hue Service Manager
  *
- *  Author: Anthony Pastor
- *
- *  To-Do:
- *  	- DNI = MAC address
+ *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
  *
  */
  
