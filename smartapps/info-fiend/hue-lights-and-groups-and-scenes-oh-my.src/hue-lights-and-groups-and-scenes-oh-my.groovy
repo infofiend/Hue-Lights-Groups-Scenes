@@ -13,6 +13,7 @@ definition(
 	category: "SmartThings Labs",
 	iconUrl: "https://s3.amazonaws.com/smartapp-icons/Partner/hue.png",
 	iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Partner/hue@2x.png"
+	singleInstance: true
 )
 
 preferences {
@@ -996,10 +997,17 @@ def setGroupColorTemperature(childDevice, huesettings, transitiontime) {
 
 def setColor(childDevice, color) {
 	log.debug "Executing 'setColor($color)'"
-	def hue =	Math.min(Math.round(color.hue * 65535 / 100), 65535)
-	def sat = Math.min(Math.round(color.saturation * 255 / 100), 255)
+	def hue = null
+	def sat = null
+	def xy = null
+	if (huesettings.hex) {
+    	xy = getHextoXY(huesettings.hex)
+    } else if (huesettings.hue && huesettings.saturation) {
+		hue = Math.min(Math.round(huesettings.hue * 65535 / 100), 65535)
+		sat = Math.min(Math.round(huesettings.saturation * 255 / 100), 255)
+    }
 
-	def value = [sat: sat, hue: hue]
+	def value = [xy: xy, sat: sat, hue: hue, on: true]
 	if (color.level != null) {
 		value.bri = Math.min(Math.round(color.level * 255 / 100), 255)
 		value.on = value.bri > 0
@@ -1007,10 +1015,6 @@ def setColor(childDevice, color) {
 
 	if (color.transitiontime != null){
 		value.transitiontime = color.transitiontime * 10
-	}
-
-	if (color.switch) {
-		value.on = color.switch == "on"
 	}
 
 	log.debug "sending command $value"
@@ -1253,6 +1257,59 @@ def getBridgeHostnameAndPort() {
 	}
 	log.trace "result = $result"
 	result
+}
+
+private getHextoXY(String colorStr) {
+    // For the hue bulb the corners of the triangle are:
+    // -Red: 0.675, 0.322
+    // -Green: 0.4091, 0.518
+    // -Blue: 0.167, 0.04
+
+    def cred = Integer.valueOf( colorStr.substring( 1, 3 ), 16 )
+    def cgreen = Integer.valueOf( colorStr.substring( 3, 5 ), 16 )
+    def cblue = Integer.valueOf( colorStr.substring( 5, 7 ), 16 )
+
+    double[] normalizedToOne = new double[3];
+    normalizedToOne[0] = (cred / 255);
+    normalizedToOne[1] = (cgreen / 255);
+    normalizedToOne[2] = (cblue / 255);
+    float red, green, blue;
+
+    // Make red more vivid
+    if (normalizedToOne[0] > 0.04045) {
+       red = (float) Math.pow(
+                (normalizedToOne[0] + 0.055) / (1.0 + 0.055), 2.4);
+    } else {
+        red = (float) (normalizedToOne[0] / 12.92);
+    }
+
+    // Make green more vivid
+    if (normalizedToOne[1] > 0.04045) {
+        green = (float) Math.pow((normalizedToOne[1] + 0.055)
+                / (1.0 + 0.055), 2.4);
+    } else {
+        green = (float) (normalizedToOne[1] / 12.92);
+    }
+
+    // Make blue more vivid
+    if (normalizedToOne[2] > 0.04045) {
+        blue = (float) Math.pow((normalizedToOne[2] + 0.055)
+                / (1.0 + 0.055), 2.4);
+    } else {
+        blue = (float) (normalizedToOne[2] / 12.92);
+    }
+
+    float X = (float) (red * 0.649926 + green * 0.103455 + blue * 0.197109);
+    float Y = (float) (red * 0.234327 + green * 0.743075 + blue * 0.022598);
+    float Z = (float) (red * 0.0000000 + green * 0.053077 + blue * 1.035763);
+
+    float x = X / (X + Y + Z);
+    float y = Y / (X + Y + Z);
+
+    double[] xy = new double[2];
+    xy[0] = x;
+    xy[1] = y;
+    return xy;
 }
 
 private Integer convertHexToInt(hex) {
