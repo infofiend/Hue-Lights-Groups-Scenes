@@ -116,7 +116,6 @@ void setTT(transitiontime) {
     
 }
 
-
 void on() 
 {
 	def level = device.currentValue("level")
@@ -326,7 +325,7 @@ void setAdjustedColor(value) {
     }
 }
 
-def refresh() {
+void refresh() {
 	log.debug "Executing 'refresh'"
 	parent.poll()
     
