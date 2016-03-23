@@ -472,14 +472,15 @@ def addBulbs() {
 				} else {
 					d = addChildDevice("info_fiend", "AP Hue Bulb", dni, newHueBulb?.value.hub, ["label":newHueBulb?.value.name])
 				}
+				d.refresh()
 			} else { 
             	//backwards compatable
 				newHueBulb = bulbs.find { (app.id + "/" + it.id) == dni }
 				d = addChildDevice("info_fiend", "AP Hue Bulb", dni, newHueBulb?.hub, ["label":newHueBulb?.name])
+				d.refresh()
 			}
 
 			log.debug "created ${d.displayName} with id $dni"
-			d.refresh()
 		} else {
 			log.debug "found ${d.displayName} with id $dni already exists, type: '$d.typeName'"
 			if (bulbs instanceof java.util.Map) {
