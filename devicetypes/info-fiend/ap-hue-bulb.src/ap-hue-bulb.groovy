@@ -168,8 +168,6 @@ void setColor(value) {
 	log.debug "setColor: ${value}, $this"
     def isOff = false
 
-// TODO: convert hue and saturation to hex and just send a color event
-
 	if(value.transitionTime) { sendEvent(name: "transitionTime", value: value.transitionTime, isStateChange: true) }
 	else {
     	def transitionTime = device.currentValue("transitionTime")
@@ -178,8 +176,8 @@ void setColor(value) {
 		value << [transitionTime: transitionTime]
 	}
 	if (value.hex) { sendEvent(name: "color", value: value.hex, isStateChange: true) } 
-	if (value.hue) { sendEvent(name: "hue", value: value.hue, displayed: false, isStateChange: true)}
-	if (value.saturation) { sendEvent(name: "saturation", value: value.saturation, displayed: false, isStateChange: true)}
+	if (value.hue) { sendEvent(name: "hue", value: value.hue, displayed: false, isStateChange: true) }
+	if (value.saturation) { sendEvent(name: "saturation", value: value.saturation, displayed: false, isStateChange: true) }
 	if (value.level) { sendEvent(name: "level", value: value.level, descriptionText: "Level has changed to ${value.level}%", isStateChange: true) }
     else {
     	// sendEvent(name: "level", value: 1)

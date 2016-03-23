@@ -981,7 +981,7 @@ def setColorTemperature(childDevice, huesettings, transitionTime, deviceType = "
     if(deviceType == "groups") { api = "action" }
     
 	log.debug "Executing 'setColorTemperature($huesettings)'"
-	def value = [ct: kelvinToMireks(huesettings), transitiontime: transitiontime * 10, on: true]
+	def value = [ct: kelvinToMireks(huesettings), transitiontime: transitionTime * 10, on: true]
 	log.trace "sending command $value"
 	put("${deviceType}/${getId(childDevice)}/${api}", value)
 }
