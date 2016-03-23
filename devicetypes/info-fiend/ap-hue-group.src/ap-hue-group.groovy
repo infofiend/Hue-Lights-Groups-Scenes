@@ -89,8 +89,8 @@ metadata {
     	}
 		
 		standardTile("toggleColorloop", "device.effect", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
-			state "colorloop", label:"On", action:"colorloopOff", nextState: "updating", icon:"https://raw.githubusercontent.com/claytonjn/Hue-Lights-Groups-Scenes/patch-5/smartapp-icons/hue/png/colorloop-on.png"
-            state "none", label:"Off", action:"colorloopOn", nextState: "updating", icon:"https://raw.githubusercontent.com/claytonjn/Hue-Lights-Groups-Scenes/patch-5/smartapp-icons/hue/png/colorloop-off.png"
+			state "colorloop", label:"On", action:"colorloopOff", nextState: "updating", icon:"https://raw.githubusercontent.com/infofiend/Hue-Lights-Groups-Scenes/master/smartapp-icons/hue/png/colorloop-on.png"
+            state "none", label:"Off", action:"colorloopOn", nextState: "updating", icon:"https://raw.githubusercontent.com/infofiend/Hue-Lights-Groups-Scenes/master/smartapp-icons/hue/png/colorloop-off.png"
             state "updating", label:"Working", icon: "st.secondary.secondary"
 		}
 	}
