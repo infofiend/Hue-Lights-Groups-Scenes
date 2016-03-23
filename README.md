@@ -1,7 +1,7 @@
 # Hue-Lights-Groups-Scenes (OH MY!)
 SmartThings SmartApps &amp; Device Handlers
 
-I've created a Hue Service Manager that finds and installs (1) individual Hue Lights, (2) Hue Groups, and (3) Hue Scenes.
+Claytonnj and I have created a Hue Service Manager and associated device handlers that finds and installs (1) individual Hue Lights, (2) Hue Groups, and (3) Hue Scenes.  Groups and Bulbs can be set with color, level, color temperature, and transition time.
 
 
 **UPDATED:  new abilities include**
@@ -38,8 +38,5 @@ Known Issue
 --------
 1. Due to the 20 second limit for routines, you need to limit the number of devices (meaning lights, groups, and scenes) that you install at a single time. Typically less than 20 works for me. This does not mean that you cannot have more than 20 total, just that you will need to go into the "Hue Lights and Groups and Scenes (OH MY)" SmartApp again once you have set it up.
 
-Etc...
---------
-1. I'll update this post with more info / screenshots later -- just wanted to distribute this now.
 
 Thanks to zpriddy for his work on Hue Groups (Connect)!
