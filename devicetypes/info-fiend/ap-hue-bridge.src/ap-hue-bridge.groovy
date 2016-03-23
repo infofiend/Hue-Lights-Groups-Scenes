@@ -3,6 +3,7 @@
  *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
  */
+ 
 // for the UI
 metadata {
 	// Automatically generated. Make future change here.
@@ -26,18 +27,18 @@ metadata {
 	            attributeState "default", label:'SN: ${currentValue}'
 			}
         }
-		standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat") {
+		standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat", height: 2, width: 6) {
             state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
         }
-		valueTile("serialNumber", "device.serialNumber", decoration: "flat", height: 1, width: 2, inactiveLabel: false) {
+		valueTile("serialNumber", "device.serialNumber", decoration: "flat", height: 1, width: 3, inactiveLabel: false) {
 			state "default", label:'SN: ${currentValue}'
 		}
-		valueTile("networkAddress", "device.networkAddress", decoration: "flat", height: 2, width: 4, inactiveLabel: false) {
-			state "default", label:'${currentValue}', height: 1, width: 2, inactiveLabel: false
+		valueTile("networkAddress", "device.networkAddress", decoration: "flat", height: 1, width: 3, inactiveLabel: false) {
+			state "default", label:'${currentValue}'
 		}
 
 		main (["rich-control"])
-		details(["rich-control", "networkAddress", "refresh", "serialNumber"])
+		details(["rich-control", "networkAddress", "serialNumber", "refresh"])
 	}
 }
 
