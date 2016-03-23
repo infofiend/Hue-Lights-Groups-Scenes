@@ -1,7 +1,7 @@
 /**
  *  AP Hue Lux Bulb
  *
- *  Author: Anthony Pastor
+ *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
  */
 // for the UI
 metadata {
