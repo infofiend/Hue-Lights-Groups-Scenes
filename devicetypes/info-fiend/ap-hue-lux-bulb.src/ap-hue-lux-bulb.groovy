@@ -3,15 +3,13 @@
  *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
  */
+ 
 // for the UI
-
-
 metadata {
 	// Automatically generated. Make future change here.
 	definition (name: "AP Hue Lux Bulb", namespace: "info_fiend", author: "Anthony Pastor") {
 		capability "Switch Level"
 		capability "Actuator"
-		capability "Color Temperature"
 		capability "Switch"
 		capability "Refresh"
 		capability "Sensor"
@@ -56,20 +54,13 @@ metadata {
 		valueTile("valueTT", "device.transTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
 			state "transTime", label: 'Transition    Time: ${currentValue}'
         }
-
-        controlTile("colorTempSliderControl", "device.colorTemperature", "slider", width: 4, height: 2, inactiveLabel: false, range:"(2000..6500)") {
-            state "colorTemperature", action:"color temperature.setColorTemperature"
-        }
-        valueTile("colorTemp", "device.colorTemperature", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-            state "colorTemperature", label: '${currentValue} K'
-        }
 		
 		standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat") {
             state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
         }
 
         main(["rich-control"])
-        details(["rich-control", "colorTempSliderControl", "colorTemp", "transitiontime", "valueTT", "refresh"])
+        details(["rich-control", "transitiontime", "valueTT", "refresh"])
     }
 
 }
@@ -165,26 +156,6 @@ void setLevel(percent, transitiontime) {
 	sendEvent(name: "level", value: percent)
     sendEvent(name: "transTime", value: transitionTime)
     sendEvent(name: "switch", value: "on", isStateChange: true)
-}
-
-void setColorTemperature(value) {
-	def transitionTime = device.currentValue("transTime")
-    if(transitionTime == null) {
-    	transitionTime = parent.getSelectedTransition()
-    }
-	if (value) {
-        log.trace "setColorTemperature: ${value}k"
-        parent.setColorTemperature(this, value, transitionTime)
-        sendEvent(name: "colorTemperature", value: value)
-	}
-}
-
-void setColorTemperature(value, transitiontime) {
-	if (value) {
-        log.trace "setColorTemperature: ${value}k"
-        parent.setColorTemperature(this, value, transitiontime)
-        sendEvent(name: "colorTemperature", value: value)
-	}
 }
 
 void refresh() {
