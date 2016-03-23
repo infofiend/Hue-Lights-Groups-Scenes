@@ -4,7 +4,7 @@
  *	Version 1.3: Fixed getSceneID
  *				 Fixed updateScene
  *
- *  Author: Anthony Pastor
+ *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
  */
 // for the UI
 metadata {
