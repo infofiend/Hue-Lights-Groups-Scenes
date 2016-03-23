@@ -19,19 +19,21 @@ metadata {
 		capability "Polling"
 		capability "Refresh"
 		capability "Sensor"
-		//capability "Test Capability" //Hope to replace with Transistion Time
 
 		command "setAdjustedColor"
 		command "reset"        
         command "refresh"
 		command "setColorTemperature"
         command "setTransitionTime"
-        command "getGroupID"
+        command "colorloopOn"
+        command "colorloopOff"
+		command "getGroupID"
 		command "log", ["string","string"]        
         
 		attribute "transitionTime", "NUMBER"
         attribute "colorTemperature", "NUMBER"
 		attribute "groupID", "STRING"
+		attribute "effect", "enum", ["none", "colorloop"]
 	}
 
 	simulator {
@@ -85,10 +87,16 @@ metadata {
        		state "Normal", label: 'Get groupID', action:"switch groupID.getGroupID", backgroundColor:"#BDE5F2", nextState: "Retrieving"
 	    	state "Retrieving", label: 'Retrieving', backgroundColor: "#ffffff", nextState: "Normal"
     	}
-
+		
+		standardTile("toggleColorloop", "device.effect", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
+			state "colorloop", label:"On", action:"colorloopOff", nextState: "updating", icon:"https://raw.githubusercontent.com/claytonjn/Hue-Lights-Groups-Scenes/patch-5/smartapp-icons/hue/png/colorloop-on.png"
+            state "none", label:"Off", action:"colorloopOn", nextState: "updating", icon:"https://raw.githubusercontent.com/claytonjn/Hue-Lights-Groups-Scenes/patch-5/smartapp-icons/hue/png/colorloop-off.png"
+            state "updating", label:"Working", icon: "st.secondary.secondary"
+		}
 	}
+	
 	main(["rich-control"])
-	details(["rich-control", "colorTempSliderControl", "colorTemp", "transitionTimeSliderControl", "transTime", "refresh", "reset", "groupID", "getGroupID"])
+	details(["rich-control", "colorTempSliderControl", "colorTemp", "transitionTimeSliderControl", "transTime", "toggleColorloop", "refresh", "reset", "groupID", "getGroupID"])
 
 }
 
@@ -289,4 +297,16 @@ void getGroupID() {
 
 void poll() {
 	parent.poll()
+}
+
+void colorloopOn() {   
+    log.debug "Executing 'colorloopOn'"
+    parent.setEffect(this, "colorloop", deviceType)
+    sendEvent(name: "effect", value: "colorloop", isStateChange: true)
+}
+
+void colorloopOff() {
+    log.debug "Executing 'colorloopOff'"
+    parent.setEffect(this, "none", deviceType)
+    sendEvent(name: "effect", value: "none", isStateChange: true)
 }
