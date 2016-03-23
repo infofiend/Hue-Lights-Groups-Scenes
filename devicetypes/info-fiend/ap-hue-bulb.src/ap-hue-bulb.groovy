@@ -348,6 +348,11 @@ void setAdjustedColor(value) {
     }
 }
 
+def refresh() {
+	log.debug "Executing 'refresh'"
+	parent.manualRefresh()
+}
+
 def adjustOutgoingHue(percent) {
 	def adjusted = percent
 	if (percent > 31) {

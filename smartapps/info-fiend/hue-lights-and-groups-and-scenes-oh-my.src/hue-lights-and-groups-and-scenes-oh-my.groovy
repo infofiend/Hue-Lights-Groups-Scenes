@@ -413,6 +413,18 @@ def initialize() {
     runEvery5Minutes("doDeviceSync")
 }
 
+def manualRefresh() {
+    unschedule()
+	unsubscribe()
+    doDeviceSync()
+    runEvery5Minutes("doDeviceSync")
+}
+
+def uninstalled(){
+	state.bridges = [:]
+    state.username = null
+}
+
 // Handles events to add new bulbs
 def bulbListHandler(evt) {
 	def bulbs = [:]
