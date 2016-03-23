@@ -169,7 +169,6 @@ def groupDiscovery()
 	}
 }
 
-
 def sceneDiscovery()
 {
 	int sceneRefreshCount = !state.sceneRefreshCount ? 0 : state.sceneRefreshCount as int
@@ -208,14 +207,6 @@ def defaultTransition()
 			input "selectedTransition", "number", required:true, title:"Transition Time (seconds)", value: 1
 		}
 	}
-}
-
-def getSelectedTransition() {
-	return settings.selectedTransition
-}
-
-int kelvinToMireks(kelvin) {
-	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
 }
 
 private discoverBridges() {
@@ -468,7 +459,6 @@ def sceneListHandler(evt) {
 	log.info "${scenes.size()} scenes found"
 }
 
-
 def addBulbs() {
 	def bulbs = getHueBulbs()
 	selectedBulbs.each { dni ->
@@ -525,7 +515,6 @@ def addGroups() {
 	}
 }
 
-
 def addScenes() {
 	def scenes = getHueScenes()
 	selectedScenes.each { dni ->
@@ -549,7 +538,6 @@ def addScenes() {
 	}
 }
 
-
 def addBridge() {
 	def vbridges = getVerifiedHueBridges()
 	def vbridge = vbridges.find {(it.value.ip + ":" + it.value.port) == selectedHue}
@@ -570,7 +558,6 @@ def addBridge() {
 		}
 	}
 }
-
 
 def locationHandler(evt) {
 	log.info "LOCATION HANDLER: $evt.description"
@@ -787,7 +774,6 @@ def doDeviceSync(){
     poll()
 }
 
-
 /////////////////////////////////////
 //CHILD DEVICE METHODS
 /////////////////////////////////////
@@ -932,7 +918,6 @@ def parse(childDevice, description) {
 	}
 }
 
-
 def on(childDevice, transitiontime, percent) {
 	def level = Math.min(Math.round(percent * 255 / 100), 255)
 	def value = [on: true, bri: level]
@@ -962,7 +947,6 @@ def groupOff(childDevice, transitiontime) {
 	value.transitiontime = transitiontime * 10
 	put("groups/${getId(childDevice)}/action", value)
 }
-
 
 def setLevel(childDevice, percent, transitiontime) {
 	log.debug "Executing 'setLevel'"
@@ -1002,18 +986,6 @@ def setGroupHue(childDevice, percent, transitiontime) {
 	put("groups/${getId(childDevice)}/action", [hue: level, transitiontime: transitiontime * 10])
 }
 
-def setGroupScene(childDevice, Number inGroupID) {
-	childDevice?.log "setGroupScene: received inGroupID of ${inGroupID}." // and transitionTime of ${inTime}."
-	def sceneID = getId(childDevice) // - "s"
-    def groupID = inGroupID ?: "0"
-	childDevice?.log "setGroupScene: scene = ${sceneID} "
-    String path = "groups/${groupID}/action/"
-    
-	childDevice?.log "Path = ${path} "
-
-	put("${path}", [scene: sceneID]) // , transitiontime: inTime * 10])
-}
-
 def setColor(childDevice, color) {
 	log.debug "Executing 'setColor($color)'"
 	def hue =	Math.min(Math.round(color.hue * 65535 / 100), 65535)
@@ -1035,39 +1007,6 @@ def setColor(childDevice, color) {
 
 	log.debug "sending command $value"
 	put("lights/${getId(childDevice)}/state", value)
-}
-
-def setCT(childDevice, cTemp, transitiontime) {
-	log.debug "Executing 'setCT'"
-	def value = [ct: cTemp, transitiontime: transitiontime * 10]
-	put("lights/${getId(childDevice)}/state", value)
-}
-
-def setGroupCT(childDevice, cTemp, transitiontime) {
-	log.debug "Executing 'setCT'"
-	def value = [ct: cTemp, transitiontime: transitiontime * 10]
-	put("groups/${getId(childDevice)}/action", value)
-}
-
-
-def setToGroup(childDevice, Number inGroupID ) {
-	childDevice?.log "setToGroup: received inGroupID of ${inGroupID}." //  and transitionTime of ${inTime}."
-	def sceneID = getId(childDevice) - "s"
-    def groupID = inGroupID ?: "0"
-//    def newTT = inTime as Integer
-    
-	childDevice?.log "setToGroup: sceneID = ${sceneID} "
-    String gPath = "groups/${groupID}/action/"
-    
-//    String sPath = "scenes/${sceneID}/"
-    
-//	log.debug "Scene path = ${sPath} "
-
-//	put("${sPath}", [transitiontime: newTT * 10])
-    
-	childDevice?.log "Group path = ${gPath} "
-
-	put("${gPath}", [scene: sceneID])
 }
 
 def setGroupColor(childDevice, color) {
@@ -1093,6 +1032,50 @@ def setGroupColor(childDevice, color) {
 	put("groups/${getId(childDevice)}/action", value)
 }
 
+def setCT(childDevice, cTemp, transitiontime) {
+	log.debug "Executing 'setCT'"
+	def value = [ct: cTemp, transitiontime: transitiontime * 10]
+	put("lights/${getId(childDevice)}/state", value)
+}
+
+def setGroupCT(childDevice, cTemp, transitiontime) {
+	log.debug "Executing 'setCT'"
+	def value = [ct: cTemp, transitiontime: transitiontime * 10]
+	put("groups/${getId(childDevice)}/action", value)
+}
+
+def setGroupScene(childDevice, Number inGroupID) {
+	childDevice?.log "setGroupScene: received inGroupID of ${inGroupID}." // and transitionTime of ${inTime}."
+	def sceneID = getId(childDevice) // - "s"
+    def groupID = inGroupID ?: "0"
+	childDevice?.log "setGroupScene: scene = ${sceneID} "
+    String path = "groups/${groupID}/action/"
+    
+	childDevice?.log "Path = ${path} "
+
+	put("${path}", [scene: sceneID]) // , transitiontime: inTime * 10])
+}
+
+def setToGroup(childDevice, Number inGroupID ) {
+	childDevice?.log "setToGroup: received inGroupID of ${inGroupID}." //  and transitionTime of ${inTime}."
+	def sceneID = getId(childDevice) - "s"
+    def groupID = inGroupID ?: "0"
+//    def newTT = inTime as Integer
+    
+	childDevice?.log "setToGroup: sceneID = ${sceneID} "
+    String gPath = "groups/${groupID}/action/"
+    
+//    String sPath = "scenes/${sceneID}/"
+    
+//	log.debug "Scene path = ${sPath} "
+
+//	put("${sPath}", [transitiontime: newTT * 10])
+    
+	childDevice?.log "Group path = ${gPath} "
+
+	put("${gPath}", [scene: sceneID])
+}
+
 def nextLevel(childDevice) {
 	def level = device.latestValue("level") as Integer ?: 0
 	if (level < 100) {
@@ -1102,30 +1085,6 @@ def nextLevel(childDevice) {
 		level = 25
 	}
 	setLevel(childDevice,level)
-}
-
-private poll() {
-	def uri = "/api/${state.username}/lights/"
-	log.debug "GET:  $uri"
-	sendHubCommand(new physicalgraph.device.HubAction("""GET ${uri} HTTP/1.1
-HOST: ${selectedHue}
-
-""", physicalgraph.device.Protocol.LAN, "${selectedHue}"))
-
-	uri = "/api/${state.username}/groups/"
-	log.debug "GET:  $uri"
-	sendHubCommand(new physicalgraph.device.HubAction("""GET ${uri} HTTP/1.1
-HOST: ${selectedHue}
-
-""", physicalgraph.device.Protocol.LAN, "${selectedHue}"))
-
-	uri = "/api/${state.username}/scenes/"
-	log.debug "GET:  $uri"
-	sendHubCommand(new physicalgraph.device.HubAction("""GET ${uri} HTTP/1.1
-HOST: ${selectedHue}
-
-""", physicalgraph.device.Protocol.LAN, "${selectedHue}"))
-
 }
 
 def getId(childDevice) {
@@ -1138,7 +1097,6 @@ def getId(childDevice) {
 		return childDevice.device?.deviceNetworkId.split("/")[-1]
 	}
 }
-
 
 /** 
 def getSceneId(childDevice) {
@@ -1160,23 +1118,6 @@ def getSceneId(childDevice) {
 		
 	}
 }
-
-**/
-
-/**
-def updateTransTime(childDevice, newTT) {
-	def sceneID = getId(childDevice) - "s"
-	log.debug "updateTransTime: new transition time of ${newTT} for Scene ${sceneID}."
-    def transTime = newTT * 10
-    
-    String path = "scenes/${sceneID}/"
-    
-	log.debug "Path = ${path} "
-
-	put("${path}", [transitiontime: transTime])
-    
-}
-
 **/
 
 def updateScene(childDevice) {
@@ -1209,6 +1150,22 @@ def updateSceneUsingID(childDevice, sceneID) {
    	put("${path}", ["storelightstate": true])
 }
 
+/**
+def updateTransTime(childDevice, newTT) {
+	def sceneID = getId(childDevice) - "s"
+	log.debug "updateTransTime: new transition time of ${newTT} for Scene ${sceneID}."
+    def transTime = newTT * 10
+    
+    String path = "scenes/${sceneID}/"
+    
+	log.debug "Path = ${path} "
+
+	put("${path}", [transitiontime: transTime])
+    
+}
+
+**/
+
 def deleteScene(childDevice) {
 	childDevice?.log "deleteScene: Delete scene ${childDevice}."
 	def sceneID = getId(childDevice) - "s"
@@ -1221,9 +1178,29 @@ def deleteScene(childDevice) {
 	delete("${path}")
 }
 
+private poll() {
+	def uri = "/api/${state.username}/lights/"
+	log.debug "GET:  $uri"
+	sendHubCommand(new physicalgraph.device.HubAction("""GET ${uri} HTTP/1.1
+HOST: ${selectedHue}
 
+""", physicalgraph.device.Protocol.LAN, "${selectedHue}"))
 
+	uri = "/api/${state.username}/groups/"
+	log.debug "GET:  $uri"
+	sendHubCommand(new physicalgraph.device.HubAction("""GET ${uri} HTTP/1.1
+HOST: ${selectedHue}
 
+""", physicalgraph.device.Protocol.LAN, "${selectedHue}"))
+
+	uri = "/api/${state.username}/scenes/"
+	log.debug "GET:  $uri"
+	sendHubCommand(new physicalgraph.device.HubAction("""GET ${uri} HTTP/1.1
+HOST: ${selectedHue}
+
+""", physicalgraph.device.Protocol.LAN, "${selectedHue}"))
+
+}
 
 private put(path, body) {
 	def uri = "/api/${state.username}/$path"
@@ -1257,94 +1234,9 @@ body: body], "${selectedHue}"))
 
 }
 
-private Integer convertHexToInt(hex) {
-	Integer.parseInt(hex,16)
-}
-
-private String convertHexToIP(hex) {
-	[convertHexToInt(hex[0..1]),convertHexToInt(hex[2..3]),convertHexToInt(hex[4..5]),convertHexToInt(hex[6..7])].join(".")
-}
-
-private Boolean canInstallLabs()
-{
-	return hasAllHubsOver("000.011.00603")
-}
-
-private Boolean hasAllHubsOver(String desiredFirmware)
-{
-	return realHubFirmwareVersions.every { fw -> fw >= desiredFirmware }
-}
-
-private List getRealHubFirmwareVersions()
-{
-	return location.hubs*.firmwareVersionString.findAll { it }
-}
-
-
-def convertBulbListToMap() {
-	try {
-		if (state.bulbs instanceof java.util.List) {
-			def map = [:]
-			state.bulbs.unique {it.id}.each { bulb ->
-				map << ["${bulb.id}":["id":bulb.id, "name":bulb.name, "hub":bulb.hub]]
-			}
-			state.bulbs = map
-		}
-	}
-	catch(Exception e) {
-		log.error "Caught error attempting to convert bulb list to map: $e"
-	}
-}
-
-
-def convertGroupListToMap() {
-	log.debug "CONVERT LIST"
-	try {
-		if (state.groups instanceof java.util.List) {
-			def map = [:]
-			state.groups.unique {it.id}.each { group ->
-				map << ["${group.id}g":["id":group.id+"g", "name":group.name, "hub":group.hub]]
-			}
-			state.group = map
-		}
-	}
-	catch(Exception e) {
-		log.error "Caught error attempting to convert group list to map: $e"
-	}
-}
-
-
-def convertSceneListToMap() {
-	log.debug "CONVERT LIST"
-	try {
-		if (state.scenes instanceof java.util.List) {
-			def map = [:]
-			state.scenes.unique {it.id}.each { scene ->
-				map << ["${scene.id}s":["id":scene.id+"s", "name":scene.name, "hub":scene.hub]]
-			}
-			state.scene = map
-		}
-	}
-	catch(Exception e) {
-		log.error "Caught error attempting to convert scene list to map: $e"
-	}
-}
-
-
-def ipAddressFromDni(dni) {
-	if (dni) {
-		def segs = dni.split(":")
-		convertHexToIP(segs[0]) + ":" +  convertHexToInt(segs[1])
-	} else {
-		null
-	}
-}
-
-
 def getBridgeDni() {
 	state.hostname
 }
-
 
 def getBridgeHostname() {
 	def dni = state.hostname
@@ -1366,3 +1258,93 @@ def getBridgeHostnameAndPort() {
 	log.trace "result = $result"
 	result
 }
+
+private Integer convertHexToInt(hex) {
+	Integer.parseInt(hex,16)
+}
+
+def convertBulbListToMap() {
+	try {
+		if (state.bulbs instanceof java.util.List) {
+			def map = [:]
+			state.bulbs.unique {it.id}.each { bulb ->
+				map << ["${bulb.id}":["id":bulb.id, "name":bulb.name, "hub":bulb.hub]]
+			}
+			state.bulbs = map
+		}
+	}
+	catch(Exception e) {
+		log.error "Caught error attempting to convert bulb list to map: $e"
+	}
+}
+
+def convertGroupListToMap() {
+	log.debug "CONVERT LIST"
+	try {
+		if (state.groups instanceof java.util.List) {
+			def map = [:]
+			state.groups.unique {it.id}.each { group ->
+				map << ["${group.id}g":["id":group.id+"g", "name":group.name, "hub":group.hub]]
+			}
+			state.group = map
+		}
+	}
+	catch(Exception e) {
+		log.error "Caught error attempting to convert group list to map: $e"
+	}
+}
+
+def convertSceneListToMap() {
+	log.debug "CONVERT LIST"
+	try {
+		if (state.scenes instanceof java.util.List) {
+			def map = [:]
+			state.scenes.unique {it.id}.each { scene ->
+				map << ["${scene.id}s":["id":scene.id+"s", "name":scene.name, "hub":scene.hub]]
+			}
+			state.scene = map
+		}
+	}
+	catch(Exception e) {
+		log.error "Caught error attempting to convert scene list to map: $e"
+	}
+}
+
+private String convertHexToIP(hex) {
+	[convertHexToInt(hex[0..1]),convertHexToInt(hex[2..3]),convertHexToInt(hex[4..5]),convertHexToInt(hex[6..7])].join(".")
+}
+
+private Boolean canInstallLabs()
+{
+	return hasAllHubsOver("000.011.00603")
+}
+
+private Boolean hasAllHubsOver(String desiredFirmware)
+{
+	return realHubFirmwareVersions.every { fw -> fw >= desiredFirmware }
+}
+
+private List getRealHubFirmwareVersions()
+{
+	return location.hubs*.firmwareVersionString.findAll { it }
+}
+
+def ipAddressFromDni(dni) {
+	if (dni) {
+		def segs = dni.split(":")
+		convertHexToIP(segs[0]) + ":" +  convertHexToInt(segs[1])
+	} else {
+		null
+	}
+}
+
+def getSelectedTransition() {
+	return settings.selectedTransition
+}
+
+int kelvinToMireks(kelvin) {
+	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
+}
+
+
+

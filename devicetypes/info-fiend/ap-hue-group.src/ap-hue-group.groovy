@@ -7,6 +7,8 @@
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
  */
 // for the UI
+
+
 metadata {
 	// Automatically generated. Make future change here.
 	definition (name: "AP Hue Group", namespace: "info_fiend", author: "Anthony Pastor") {
@@ -160,44 +162,6 @@ void off(transitiontime)
 	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
 }
 
-void poll() {
-	parent.poll()
-}
-
-
-void setColorTemperature(colorTkelvin) {
-    if(colorTkelvin == null) {
-    	colorTkelvin = 2400
-    }
-    
-    def transitionTime = device.currentValue("transTime")
-    if(transitionTime == null) {
-    	transitionTime = parent.getSelectedTransition()
-    }
-    
-    def colorTmireks = parent.kelvinToMireks(colorTkelvin)
-    
-	log.debug "Executing 'setColorTemperature'"
-	parent.setGroupCT(this, colorTmireks, transitionTime)
-	sendEvent(name: "colorTemperature", value: colorTkelvin, isStateChange: true)
-    sendEvent(name: "switch", value: "on", isStateChange: true)
-
-}
-
-void setColorTemperature(colorTkelvin, transitiontime) {
-    if(colorTkelvin == null) {
-    	colorTkelvin = 2400
-    }
-        
-    def colorTmireks = parent.kelvinToMireks(colorTkelvin)
-    
-	log.debug "Executing 'setColorTemperature'"
-	parent.setGroupCT(this, colorTmireks, transitiontime)
-	sendEvent(name: "colorTemperature", value: colorTkelvin, isStateChange: true)
-    sendEvent(name: "switch", value: "on", isStateChange: true)
-
-}
-
 void nextLevel() {
 	def level = device.latestValue("level") as Integer ?: 0
 	if (level < 100) {
@@ -221,6 +185,7 @@ void setLevel(percent)
 	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 
 }
+
 void setLevel(percent, transitiontime) 
 {
 	log.debug "Executing 'setLevel'"
@@ -240,6 +205,7 @@ void setSaturation(percent)
 	sendEvent(name: "saturation", value: percent)
 	sendEvent(name: "transTime", value: transitionTime, isStateChange: true)
 }
+
 void setSaturation(percent, transitiontime) 
 {
 	log.debug "Executing 'setSaturation'"
@@ -309,11 +275,37 @@ void setColor(value) {
 	parent.setGroupColor(this, value)
 }
 
-
-def refresh() {
-	log.debug "Executing 'refresh'"
-	parent.poll()
+void setColorTemperature(colorTkelvin) {
+    if(colorTkelvin == null) {
+    	colorTkelvin = 2400
+    }
     
+    def transitionTime = device.currentValue("transTime")
+    if(transitionTime == null) {
+    	transitionTime = parent.getSelectedTransition()
+    }
+    
+    def colorTmireks = parent.kelvinToMireks(colorTkelvin)
+    
+	log.debug "Executing 'setColorTemperature'"
+	parent.setGroupCT(this, colorTmireks, transitionTime)
+	sendEvent(name: "colorTemperature", value: colorTkelvin, isStateChange: true)
+    sendEvent(name: "switch", value: "on", isStateChange: true)
+
+}
+
+void setColorTemperature(colorTkelvin, transitiontime) {
+    if(colorTkelvin == null) {
+    	colorTkelvin = 2400
+    }
+        
+    def colorTmireks = parent.kelvinToMireks(colorTkelvin)
+    
+	log.debug "Executing 'setColorTemperature'"
+	parent.setGroupCT(this, colorTmireks, transitiontime)
+	sendEvent(name: "colorTemperature", value: colorTkelvin, isStateChange: true)
+    sendEvent(name: "switch", value: "on", isStateChange: true)
+
 }
 
 void reset() {
@@ -334,6 +326,12 @@ void setAdjustedColor(value) {
     }
 }
 
+def refresh() {
+	log.debug "Executing 'refresh'"
+	parent.poll()
+    
+}
+
 def adjustOutgoingHue(percent) {
 	def adjusted = percent
 	if (percent > 31) {
@@ -349,17 +347,6 @@ def adjustOutgoingHue(percent) {
 	}
 	log.info "adjustOutgoingHue: $percent, adjusted: $adjusted"
 	adjusted
-}
-
-
-void getGroupID() {
-    log.debug "(this) means ${this} "
-    
-	def groupIDfromP = parent.getId(this)
-    log.debug "Retrieved groupID: ${groupIDfromP}."
-   
-    sendEvent(name: "groupID", value: "${groupIDfromP}", isStateChange: true)
-
 }
 
 def log(message, level = "trace") {
@@ -386,4 +373,18 @@ def log(message, level = "trace") {
     }            
     
     return null // always child interface call with a return value
+}
+
+void getGroupID() {
+    log.debug "(this) means ${this} "
+    
+	def groupIDfromP = parent.getId(this)
+    log.debug "Retrieved groupID: ${groupIDfromP}."
+   
+    sendEvent(name: "groupID", value: "${groupIDfromP}", isStateChange: true)
+
+}
+
+void poll() {
+	parent.poll()
 }
