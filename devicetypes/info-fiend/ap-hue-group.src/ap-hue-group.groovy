@@ -38,6 +38,7 @@ metadata {
 		attribute "transitionTime", "NUMBER"
         attribute "colorTemperature", "NUMBER"
 		attribute "hueID", "NUMBER"
+		attribute "colormode", "enum", ["xy", "ct", "hs"]
 		attribute "effect", "enum", ["none", "colorloop"]
 	}
 	
@@ -173,6 +174,7 @@ void setSaturation(percent, transitionTime = device.currentValue("transitionTime
 	if (verifyPercent(percent)) {
 		parent.setSaturation(this, percent, transitionTime, deviceType)
 		sendEvent(name: "saturation", value: percent, displayed: false, isStateChange: true)
+		sendEvent(name: "colormode", value: "hs", displayed: false, isStateChange: true)
 		sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
 	}
 }
@@ -184,6 +186,7 @@ void setHue(percent, transitionTime = device.currentValue("transitionTime")) {
 	if (verifyPercent(percent)) {
 		parent.setHue(this, percent, transitionTime, deviceType)
 		sendEvent(name: "hue", value: percent, displayed: false, isStateChange: true)
+		sendEvent(name: "colormode", value: "hs", displayed: false, isStateChange: true)
 		sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
 	}
 }
@@ -204,15 +207,18 @@ void setColor(value) {
 	}
 	if (verifyPercent(value.hue)) {
 		events << createEvent(name: "hue", value: value.hue, displayed: false, isStateChange: true)
+		events << createEvent(name: "colormode", value: "hs", displayed: false, isStateChange: true)
 		validValues.hue = value.hue
 	}
 	if (verifyPercent(value.saturation)) {
 		events << createEvent(name: "saturation", value: value.saturation, displayed: false, isStateChange: true)
+		events << createEvent(name: "colormode", value: "hs", displayed: false, isStateChange: true)
 		validValues.saturation = value.saturation
 	}
 	if (value.hex != null) {
 		if (value.hex ==~ /^\#([A-Fa-f0-9]){6}$/) {
 			events << createEvent(name: "color", value: value.hex, isStateChange: true)
+			events << createEvent(name: "colormode", value: "xy", displayed: false, isStateChange: true)
 			validValues.hex = value.hex
 		} else {
             log.warn "$value.hex is not a valid color"
@@ -264,6 +270,7 @@ void setColorTemperature(value, transitionTime = device.currentValue("transition
         log.trace "setColorTemperature: ${value}k"
         parent.setColorTemperature(this, value, transitionTime, deviceType)
         sendEvent(name: "colorTemperature", value: value, isStateChange: true)
+		sendEvent(name: "colormode", value: "ct", displayed: false, isStateChange: true)
 		sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
 		sendEvent(name: "switch", value: "on", isStateChange: true)
 	} else {
@@ -273,7 +280,7 @@ void setColorTemperature(value, transitionTime = device.currentValue("transition
 
 void refresh() {
 	log.debug "Executing 'refresh'"
-	parent.poll()
+	parent.manualRefresh()
 }
 
 def adjustOutgoingHue(percent) {
