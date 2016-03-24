@@ -1,7 +1,7 @@
 /**
  *  Hue Lights and Groups and Scenes (OH MY) - new Hue Service Manager
  *
- *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
+ *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  *
  */
  

@@ -4,7 +4,7 @@
  *	Version 1.3: Added Color Temp slider & valueTile
  *				 Added Transition Time slider & valueTile	
  *
- *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
+ *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  */
  
 // for the UI

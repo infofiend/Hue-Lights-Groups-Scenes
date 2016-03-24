@@ -1,7 +1,7 @@
 /**
  *  AP Hue Bridge
  *
- *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
+ *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  */
  
 // for the UI
