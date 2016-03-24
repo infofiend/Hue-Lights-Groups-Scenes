@@ -1432,6 +1432,17 @@ def setSat_Inc(childDevice, value, deviceType = "lights") {
 	}
 }
 
+def setHue_Inc(childDevice, value, deviceType = "lights") {
+	def api = "state" //lights
+    if(deviceType == "groups") { api = "action" }
+	
+	if(value < -65534 || value > 65534) { childDevice?.log "Invalid hue_inc value!" }
+	else {
+		childDevice?.log "setHue_Inc: Effect ${value}."
+		put("${deviceType}/${getId(childDevice)}/${api}", [hue_inc: value])
+	}
+}
+
 int kelvinToMireks(kelvin) {
 	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
 }

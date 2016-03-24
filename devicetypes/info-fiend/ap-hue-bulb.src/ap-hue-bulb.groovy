@@ -30,6 +30,7 @@ metadata {
 		command "colorloopOff"
 		command "bri_inc"
 		command "sat_inc"
+		command "hue_inc"
 		command "log", ["string","string"]        
         
         attribute "transitionTime", "NUMBER"
@@ -359,4 +360,9 @@ void bri_inc(value) {
 void sat_inc(value) {
 	log.debug "Executing 'sat_inc'"
 	parent.setSat_Inc(this, value, deviceType)
+}
+
+void hue_inc(value) {
+	log.debug "Executing 'hue_inc'"
+	parent.setHue_Inc(this, value, deviceType)
 }
