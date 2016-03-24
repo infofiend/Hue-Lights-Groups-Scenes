@@ -1443,6 +1443,17 @@ def setHue_Inc(childDevice, value, deviceType = "lights") {
 	}
 }
 
+def setCt_Inc(childDevice, value, deviceType = "lights") {
+	def api = "state" //lights
+    if(deviceType == "groups") { api = "action" }
+	
+	if(value < -65534 || value > 65534) { childDevice?.log "Invalid ct_inc value!" }
+	else {
+		childDevice?.log "setCt_Inc: Effect ${value}."
+		put("${deviceType}/${getId(childDevice)}/${api}", [ct_inc: value])
+	}
+}
+
 int kelvinToMireks(kelvin) {
 	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
 }
