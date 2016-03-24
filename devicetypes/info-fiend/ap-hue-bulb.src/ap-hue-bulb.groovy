@@ -28,6 +28,7 @@ metadata {
 		command "alert"
 		command "colorloopOn"
 		command "colorloopOff"
+		command "bri_inc"
 		command "log", ["string","string"]        
         
         attribute "transitionTime", "NUMBER"
@@ -347,4 +348,9 @@ void colorloopOff() {
     log.debug "Executing 'colorloopOff'"
     parent.setEffect(this, "none", deviceType)
     sendEvent(name: "effect", value: "none", isStateChange: true)
+}
+
+void bri_inc(value) {
+	log.debug "Executing 'bri_inc'"
+	parent.setBri_Inc(this, value, deviceType)
 }

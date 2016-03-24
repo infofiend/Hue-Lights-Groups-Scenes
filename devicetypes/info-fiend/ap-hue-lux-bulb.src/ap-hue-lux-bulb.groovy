@@ -18,6 +18,7 @@ metadata {
         command "refresh"
         command "setTransitionTime"
 		command "alert"
+		command "bri_inc"
         command "log", ["string","string"]
         
         attribute "transitionTime", "NUMBER"
@@ -181,4 +182,9 @@ void initialize(hueID) {
 void alert(value) {
 	log.debug "Executing 'alert'"
 	parent.setAlert(this, value, deviceType)
+}
+
+void bri_inc(value) {
+	log.debug "Executing 'bri_inc'"
+	parent.setBri_Inc(this, value, deviceType)
 }

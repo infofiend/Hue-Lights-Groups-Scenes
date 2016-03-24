@@ -1410,6 +1410,17 @@ def setEffect(childDevice, effect, deviceType = "lights") {
 	put("${deviceType}/${getId(childDevice)}/${api}", value)
 }
 
+def setBri_Inc(childDevice, value, deviceType = "lights") {
+	def api = "state" //lights
+    if(deviceType == "groups") { api = "action" }
+	
+	if(value < -254 || value > 254) { childDevice?.log "Invalid bri_inc value!" }
+	else {
+		childDevice?.log "setBri_Inc: Effect ${value}."
+		put("${deviceType}/${getId(childDevice)}/${api}", [bri_inc: value])
+	}
+}
+
 int kelvinToMireks(kelvin) {
 	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
 }
