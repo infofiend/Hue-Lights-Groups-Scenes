@@ -21,21 +21,20 @@ metadata {
 		capability "Sensor"
 
 		command "setAdjustedColor"
-		command "reset"        
+		command "reset"
         command "refresh"
 		command "setColorTemperature"
         command "setTransitionTime"
         command "colorloopOn"
         command "colorloopOff"
-		command "getGroupID"
-		command "log", ["string","string"]        
+		command "log", ["string","string"]
         
 		attribute "transitionTime", "NUMBER"
         attribute "colorTemperature", "NUMBER"
-		attribute "groupID", "STRING"
+		attribute "hueID", "NUMBER"
 		attribute "effect", "enum", ["none", "colorloop"]
 	}
-
+	
 	simulator {
 		// TODO: define status and reply messages here
 	}
@@ -80,13 +79,9 @@ metadata {
 			state "transitionTime", label: 'Transition    Time: ${currentValue}'
         }
 
-		valueTile("groupID", "device.groupID", inactiveLabel: false, decoration: "flat") {
-			state "groupID", label: 'groupID ${currentValue}   '
+		valueTile("hueID", "device.hueID", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+			state "default", label: 'ID: ${currentValue}'
 		}
-		standardTile("getGroupID", "device.getGroupID", inactiveLabel: false, decoration: "flat", defaultState: "Ready") {
-       		state "Normal", label: 'Get groupID', action:"switch groupID.getGroupID", backgroundColor:"#BDE5F2", nextState: "Retrieving"
-	    	state "Retrieving", label: 'Retrieving', backgroundColor: "#ffffff", nextState: "Normal"
-    	}
 		
 		standardTile("toggleColorloop", "device.effect", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "colorloop", label:"On", action:"colorloopOff", nextState: "updating", icon:"https://raw.githubusercontent.com/infofiend/Hue-Lights-Groups-Scenes/master/smartapp-icons/hue/png/colorloop-on.png"
@@ -96,7 +91,7 @@ metadata {
 	}
 	
 	main(["rich-control"])
-	details(["rich-control", "colorTempSliderControl", "colorTemp", "transitionTimeSliderControl", "transTime", "toggleColorloop", "refresh", "reset", "groupID", "getGroupID"])
+	details(["rich-control", "colorTempSliderControl", "colorTemp", "transitionTimeSliderControl", "transTime", "toggleColorloop", "refresh", "reset", "hueID"])
 
 }
 
@@ -331,17 +326,9 @@ def log(message, level = "trace") {
 
 def getDeviceType() { return "groups" }
 
-void getGroupID() {
-    log.debug "(this) means ${this} "
-    
-	def groupIDfromP = parent.getId(this)
-    log.debug "Retrieved groupID: ${groupIDfromP}."
-   
-    sendEvent(name: "groupID", value: "${groupIDfromP}", isStateChange: true)
-}
-
-void poll() {
-	parent.poll()
+void initialize(hueID) {
+    log.debug "Initializing with ID ${hueID}"
+    sendEvent(name: "hueID", value: "${hueID}", isStateChange: true)
 }
 
 void colorloopOn() {   

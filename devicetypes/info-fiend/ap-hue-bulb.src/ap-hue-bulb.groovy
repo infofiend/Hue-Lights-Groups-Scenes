@@ -31,6 +31,7 @@ metadata {
         
         attribute "transitionTime", "NUMBER"
         attribute "colorTemperature", "NUMBER"
+		attribute "hueID", "NUMBER"
         attribute "effect", "enum", ["none", "colorloop"]
 	}
 
@@ -78,6 +79,10 @@ metadata {
 			state "transitionTime", label: 'Transition    Time: ${currentValue}'
         }
 		
+		valueTile("hueID", "device.hueID", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+			state "default", label: 'ID: ${currentValue}'
+		}
+		
         standardTile("toggleColorloop", "device.effect", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "colorloop", label:"On", action:"colorloopOff", nextState: "updating", icon:"https://raw.githubusercontent.com/infofiend/Hue-Lights-Groups-Scenes/master/smartapp-icons/hue/png/colorloop-on.png"
             state "none", label:"Off", action:"colorloopOn", nextState: "updating", icon:"https://raw.githubusercontent.com/infofiend/Hue-Lights-Groups-Scenes/master/smartapp-icons/hue/png/colorloop-off.png"
@@ -87,7 +92,7 @@ metadata {
 	}
 
 	main(["rich-control"])
-	details(["rich-control", "colorTempSliderControl", "colorTemp", "transitionTimeSliderControl", "transTime", "toggleColorloop", "refresh", "reset"])
+	details(["rich-control", "colorTempSliderControl", "colorTemp", "transitionTimeSliderControl", "transTime", "toggleColorloop", "refresh", "reset", "hueID"])
 }
 
 // parse events into attributes
@@ -320,6 +325,11 @@ def log(message, level = "trace") {
 }
 
 def getDeviceType() { return "lights" }
+
+void initialize(hueID) {
+    log.debug "Initializing with ID ${hueID}"
+    sendEvent(name: "hueID", value: "${hueID}", isStateChange: true)
+}
 
 void colorloopOn() {   
     log.debug "Executing 'colorloopOn'"

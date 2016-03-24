@@ -458,18 +458,21 @@ def addBulbs() {
 				newHueBulb = bulbs.find { (app.id + "/" + it.value.id) == dni }
 				if (newHueBulb?.value?.type?.equalsIgnoreCase("Dimmable light")) {
 					d = addChildDevice("info_fiend", "AP Hue Lux Bulb", dni, newHueBulb?.value.hub, ["label":newHueBulb?.value.name])
+					d.initialize(newHueBulb?.value.id)
 				} else {
 					d = addChildDevice("info_fiend", "AP Hue Bulb", dni, newHueBulb?.value.hub, ["label":newHueBulb?.value.name])
+					d.initialize(newHueBulb?.value.id)
 				}
 				d.refresh()
 			} else { 
             	//backwards compatable
 				newHueBulb = bulbs.find { (app.id + "/" + it.id) == dni }
 				d = addChildDevice("info_fiend", "AP Hue Bulb", dni, newHueBulb?.hub, ["label":newHueBulb?.name])
-				d.refresh()
+				d.initialize(newHueBulb?.id)
 			}
 
 			log.debug "created ${d.displayName} with id $dni"
+			d.refresh()
 		} else {
 			log.debug "found ${d.displayName} with id $dni already exists, type: '$d.typeName'"
 			if (bulbs instanceof java.util.Map) {
@@ -493,6 +496,7 @@ def addGroups() {
 			{
 				newHueGroup = groups.find { (app.id + "/" + it.value.id + "g") == dni }
 				d = addChildDevice("info_fiend", "AP Hue Group", dni, newHueGroup?.value.hub, ["label":newHueGroup?.value.name, "groupID":newHueGroup?.value.id])
+				d.initialize(newHueGroup?.value.id)
 			} 
 
 			log.debug "created ${d.displayName} with id $dni"

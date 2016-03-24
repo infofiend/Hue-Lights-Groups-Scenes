@@ -14,15 +14,13 @@ metadata {
 		capability "Polling"
 		capability "Refresh"
 		capability "Sensor"
-
-		//capability "Test Capability" //Hope to replace with Transistion Time
         
         command "refresh"
         command "setTransitionTime"
         command "log", ["string","string"]
         
         attribute "transitionTime", "NUMBER"
-        
+        attribute "hueID", "NUMBER"
 	}
 
 	simulator {
@@ -55,9 +53,13 @@ metadata {
 		valueTile("transTime", "device.transitionTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
 			state "transitionTime", label: 'Transition    Time: ${currentValue}'
         }
+		
+		valueTile("hueID", "device.hueID", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+			state "default", label: 'ID: ${currentValue}'
+		}
 
         main(["rich-control"])
-        details(["rich-control", "transitionTimeSliderControl", "transTime", "refresh"])
+        details(["rich-control", "transitionTimeSliderControl", "transTime", "refresh", "hueID"])
     }
 
 }
@@ -169,3 +171,8 @@ def log(message, level = "trace") {
 }
 
 def getDeviceType() { return "lights" }
+
+void initialize(hueID) {
+    log.debug "Initializing with ID ${hueID}"
+    sendEvent(name: "hueID", value: "${hueID}", isStateChange: true)
+}
