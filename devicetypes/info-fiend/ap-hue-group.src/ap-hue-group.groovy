@@ -32,6 +32,7 @@ metadata {
 		command "sat_inc"
 		command "hue_inc"
 		command "ct_inc"
+		command "xy_inc"
 		command "log", ["string","string"]
         
 		attribute "transitionTime", "NUMBER"
@@ -371,4 +372,9 @@ void hue_inc(value) {
 void ct_inc(value) {
 	log.debug "Executing 'ct_inc'"
 	parent.setCt_Inc(this, value, deviceType)
+}
+
+void xy_inc(x, y) {
+	log.debug "Executing 'xy_inc'"
+	parent.setXy_Inc(this, x, y, deviceType)
 }

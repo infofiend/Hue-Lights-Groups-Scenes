@@ -1416,7 +1416,7 @@ def setBri_Inc(childDevice, value, deviceType = "lights") {
 	
 	if(value < -254 || value > 254) { childDevice?.log "Invalid bri_inc value!" }
 	else {
-		childDevice?.log "setBri_Inc: Effect ${value}."
+		childDevice?.log "setBri_Inc: Value ${value}."
 		put("${deviceType}/${getId(childDevice)}/${api}", [bri_inc: value])
 	}
 }
@@ -1427,7 +1427,7 @@ def setSat_Inc(childDevice, value, deviceType = "lights") {
 	
 	if(value < -254 || value > 254) { childDevice?.log "Invalid sat_inc value!" }
 	else {
-		childDevice?.log "setSat_Inc: Effect ${value}."
+		childDevice?.log "setSat_Inc: Value ${value}."
 		put("${deviceType}/${getId(childDevice)}/${api}", [sat_inc: value])
 	}
 }
@@ -1438,7 +1438,7 @@ def setHue_Inc(childDevice, value, deviceType = "lights") {
 	
 	if(value < -65534 || value > 65534) { childDevice?.log "Invalid hue_inc value!" }
 	else {
-		childDevice?.log "setHue_Inc: Effect ${value}."
+		childDevice?.log "setHue_Inc: Value ${value}."
 		put("${deviceType}/${getId(childDevice)}/${api}", [hue_inc: value])
 	}
 }
@@ -1449,8 +1449,20 @@ def setCt_Inc(childDevice, value, deviceType = "lights") {
 	
 	if(value < -65534 || value > 65534) { childDevice?.log "Invalid ct_inc value!" }
 	else {
-		childDevice?.log "setCt_Inc: Effect ${value}."
+		childDevice?.log "setCt_Inc: Value ${value}."
 		put("${deviceType}/${getId(childDevice)}/${api}", [ct_inc: value])
+	}
+}
+
+def setXy_Inc(childDevice, x, y, deviceType = "lights") {
+	def api = "state" //lights
+    if(deviceType == "groups") { api = "action" }
+	
+	if(x > 0.5) { childDevice?.log "Invalid x value!" }
+	else if(y > 0.5) { childDevice?.log "Invalid y value!" }
+	else {
+		childDevice?.log "setCt_Inc: x ${x} y ${y}."
+		put("${deviceType}/${getId(childDevice)}/${api}", [xy_inc: [x, y]])
 	}
 }
 
