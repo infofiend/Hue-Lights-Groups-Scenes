@@ -787,17 +787,13 @@ def parse(childDevice, description) {
 		def body = new groovy.json.JsonSlurper().parseText(bodyString)
 		log.debug "BODY - $body"
 		if (body instanceof java.util.HashMap)
-		{ //poll response
-			def bulbs = getChildDevices()
-            //for each bulb
-            //Group
-            //Scene
+		{  //poll response
+			def devices = getChildDevices() //bulb, group
 
-             for (bulb in body) {
-                def d = bulbs.find{it.deviceNetworkId == "${app.id}/${bulb.key}"}
+            for (bulb in body) {
+                def d = devices.find{it.deviceNetworkId == "${app.id}/${bulb.key}"}
                  if (d) {
-                 	if(bulb.value.type == "Extended color light" || bulb.value.type == "Color light" || bulb.value.type == "Dimmable light")
-                 	{
+                 	if(bulb.value.type == "Extended color light" || bulb.value.type == "Color light" || bulb.value.type == "Dimmable light") {
 	                		log.debug "Reading Poll for Lights"
 		                    if (bulb.value.state.reachable) {
 		                            sendEvent(d.deviceNetworkId, [name: "switch", value: bulb.value?.state?.on ? "on" : "off"])
@@ -811,10 +807,11 @@ def parse(childDevice, description) {
                                         sendEvent(d.deviceNetworkId, [name: "saturation", value: sat])
 		                            }
                                     if (bulb.value.state.ct) {
-                                    	def ct = mireksToKelvin(bulbe.value.state.ct) as int
+                                    	def ct = mireksToKelvin(bulb.value.state.ct) as int
                                         sendEvent(d.deviceNetworkId, [name: "colorTemperature", value: ct])
                                     }
                                     if (bulb.value.state.effect) { sendEvent(d.deviceNetworkId, [name: "effect", value: bulb.value.state.effect]) }
+									if (bulb.value.state.colormode) { sendEvent(d.deviceNetworkId, [name: "colormode", value: bulb.value.state.colormode]) }
 		                        } else {
 		                            sendEvent(d.deviceNetworkId, [name: "switch", value: "off"])
 		                            sendEvent(d.deviceNetworkId, [name: "level", value: 100])                     
@@ -830,26 +827,21 @@ def parse(childDevice, description) {
                                     	def ct = 2710
                                         sendEvent(d.deviceNetworkId, [name: "colorTemperature", value: ct])
                                     }
-                                    if (bulb.value.state.effect) { sendEvent(d.deviceNetworkId, [name: "effect", value: bulb.value.state.effect]) }
-		                     }
-		                 }
-	                 }
-	             }
+                                    if (bulb.value.state.effect) { sendEvent(d.deviceNetworkId, [name: "effect", value: "none"]) }
+		                    }
+		                }
+	                }
+	            }
 
-	        bulbs = getChildDevices()
+	        devices = getChildDevices()
             for (bulb in body) {
-                def d = bulbs.find{it.deviceNetworkId == "${app.id}/${bulb.key}g"}    
-                if (d) {
-                
-	                if(bulb.value.type == "LightGroup" || bulb.value.type == "Room")
-                	{
-                		
+                def d = devices.find{it.deviceNetworkId == "${app.id}/${bulb.key}g"}    
+                if (d) {                
+	                if(bulb.value.type == "LightGroup" || bulb.value.type == "Room") {
                 		log.trace "Reading Poll for Groups"
-	              
                         sendEvent(d.deviceNetworkId, [name: "switch", value: bulb.value?.action?.on ? "on" : "off"])
                         sendEvent(d.deviceNetworkId, [name: "level", value: Math.round(bulb.value.action.bri * 100 / 255)])
-                        if (bulb.value.action.sat) 
-                        {
+                        if (bulb.value.action.sat) {
                             def hue = Math.min(Math.round(bulb.value.action.hue * 100 / 65535), 65535) as int
                             def sat = Math.round(bulb.value.action.sat * 100 / 255) as int
                             def hex = colorUtil.hslToHex(hue, sat)
@@ -857,16 +849,15 @@ def parse(childDevice, description) {
                             sendEvent(d.deviceNetworkId, [name: "hue", value: hue])
                             sendEvent(d.deviceNetworkId, [name: "saturation", value: sat])
                         }
-                        if (bulb.value.state.ct) {
-                             def ct = mireksToKelvin(bulbe.value.state.ct) as int
+                        if (bulb.value.action.ct) {
+                             def ct = mireksToKelvin(bulb.value.action.ct) as int
                              sendEvent(d.deviceNetworkId, [name: "colorTemperature", value: ct])
-                         }
-                        if (bulb.value.state.effect) { sendEvent(d.deviceNetworkId, [name: "effect", value: bulb.value.state.effect]) }
-                    }
-	                        
+                        }
+                        if (bulb.value.action.effect) { sendEvent(d.deviceNetworkId, [name: "effect", value: bulb.value.action.effect]) }
+						if (bulb.value.action.colormode) { sendEvent(d.deviceNetworkId, [name: "colormode", value: bulb.value.action.colormode]) }
+                    }    
                 }
-             }
-
+            }
    		}     
 		else
 		{ //put response
@@ -906,11 +897,14 @@ def parse(childDevice, description) {
 								hsl[childDeviceNetworkId].hue = Math.min(Math.round(v * 100 / 65535), 65535) as int
 								break
                             case "ct":
-                            	sendEvent(chileDeviceNetworkId, [name: "colorTemperature", value: mireksToKelvin(v)])
+                            	sendEvent(childDeviceNetworkId, [name: "colorTemperature", value: mireksToKelvin(v)])
                                 break
                             case "effect":
-                            	sendEvent(chileDeviceNetworkId, [name: "effect", value: v])
+                            	sendEvent(childDeviceNetworkId, [name: "effect", value: v])
                                 break
+							case "colormode":
+								sendEvent(childDeviceNetworkId, [name: "colormode", value: v])
+								break
 						}
 					}
 
