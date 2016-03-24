@@ -89,6 +89,9 @@ metadata {
 		valueTile("hueID", "device.hueID", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
 			state "default", label: 'ID: ${currentValue}'
 		}
+		valueTile("colormode", "device.colormode", inactiveLabel: false, decoration: "flat", width: 3, height: 1) {
+			state "default", label: 'Colormode: ${currentValue}'
+		}
 		
         standardTile("toggleColorloop", "device.effect", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "colorloop", label:"On", action:"colorloopOff", nextState: "updating", icon:"https://raw.githubusercontent.com/infofiend/Hue-Lights-Groups-Scenes/master/smartapp-icons/hue/png/colorloop-on.png"
@@ -99,7 +102,7 @@ metadata {
 	}
 
 	main(["rich-control"])
-	details(["rich-control", "colorTempSliderControl", "colorTemp", "transitionTimeSliderControl", "transTime", "toggleColorloop", "refresh", "reset", "hueID"])
+	details(["rich-control", "colorTempSliderControl", "colorTemp", "transitionTimeSliderControl", "transTime", "toggleColorloop", "refresh", "reset", "hueID", "colormode"])
 }
 
 // parse events into attributes
