@@ -25,6 +25,7 @@ metadata {
         command "refresh"  
         command "setColorTemperature"
         command "setTransitionTime"
+		command "alert"
 		command "colorloopOn"
 		command "colorloopOff"
 		command "log", ["string","string"]        
@@ -329,6 +330,11 @@ def getDeviceType() { return "lights" }
 void initialize(hueID) {
     log.debug "Initializing with ID ${hueID}"
     sendEvent(name: "hueID", value: "${hueID}", isStateChange: true)
+}
+
+void alert(value) {
+	log.debug "Executing 'alert'"
+	parent.setAlert(this, value, deviceType)
 }
 
 void colorloopOn() {   

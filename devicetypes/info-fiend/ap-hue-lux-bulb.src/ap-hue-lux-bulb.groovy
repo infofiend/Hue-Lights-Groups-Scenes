@@ -17,6 +17,7 @@ metadata {
         
         command "refresh"
         command "setTransitionTime"
+		command "alert"
         command "log", ["string","string"]
         
         attribute "transitionTime", "NUMBER"
@@ -175,4 +176,9 @@ def getDeviceType() { return "lights" }
 void initialize(hueID) {
     log.debug "Initializing with ID ${hueID}"
     sendEvent(name: "hueID", value: "${hueID}", isStateChange: true)
+}
+
+void alert(value) {
+	log.debug "Executing 'alert'"
+	parent.setAlert(this, value, deviceType)
 }

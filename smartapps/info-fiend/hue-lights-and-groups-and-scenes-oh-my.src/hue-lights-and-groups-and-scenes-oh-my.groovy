@@ -1389,6 +1389,18 @@ def getSelectedTransition() {
 	return settings.selectedTransition
 }
 
+def setAlert(childDevice, effect, deviceType = "lights") {
+	def api = "state" //lights
+    if(deviceType == "groups") { api = "action" }
+	
+	if(effect != "none" && effect != "select" && effect != "lselect") { childDevice?.log "Invalid alert value!" }
+    else {
+		def value = [alert: effect]
+		childDevice?.log "setAlert: Alert ${effect}."
+		put("${deviceType}/${getId(childDevice)}/${api}", value)
+	}
+}
+
 def setEffect(childDevice, effect, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
