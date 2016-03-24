@@ -1421,6 +1421,17 @@ def setBri_Inc(childDevice, value, deviceType = "lights") {
 	}
 }
 
+def setSat_Inc(childDevice, value, deviceType = "lights") {
+	def api = "state" //lights
+    if(deviceType == "groups") { api = "action" }
+	
+	if(value < -254 || value > 254) { childDevice?.log "Invalid sat_inc value!" }
+	else {
+		childDevice?.log "setSat_Inc: Effect ${value}."
+		put("${deviceType}/${getId(childDevice)}/${api}", [sat_inc: value])
+	}
+}
+
 int kelvinToMireks(kelvin) {
 	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
 }

@@ -19,6 +19,7 @@ metadata {
         command "setTransitionTime"
 		command "alert"
 		command "bri_inc"
+		command "sat_inc"
         command "log", ["string","string"]
         
         attribute "transitionTime", "NUMBER"
@@ -187,4 +188,9 @@ void alert(value) {
 void bri_inc(value) {
 	log.debug "Executing 'bri_inc'"
 	parent.setBri_Inc(this, value, deviceType)
+}
+
+void sat_inc(value) {
+	log.debug "Executing 'sat_inc'"
+	parent.setSat_Inc(this, value, deviceType)
 }
