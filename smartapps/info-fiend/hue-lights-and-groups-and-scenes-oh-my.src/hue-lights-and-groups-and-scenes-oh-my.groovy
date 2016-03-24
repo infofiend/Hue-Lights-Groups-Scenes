@@ -1006,30 +1006,42 @@ def setColorTemperature(childDevice, huesettings, transitionTime, deviceType = "
 	put("${deviceType}/${getId(childDevice)}/${api}", value)
 }
 
-def setColor(childDevice, color, deviceType = "lights") {
+def setColor(childDevice, huesettings, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
     
-	childDevice?.log "Executing 'setColor($color)'"
-	def hue =	Math.min(Math.round(color.hue * 65535 / 100), 65535)
-	def sat = Math.min(Math.round(color.saturation * 255 / 100), 255)
+	childDevice?.log "Executing 'setColor($huesettings)'"
+	def value = [:]
+	def hue = null
+    def sat = null
+    def xy = null
+	
+    if (huesettings.hex != null) {
+        value.xy = getHextoXY(huesettings.hex)
+    } else {
+        if (huesettings.hue != null)
+            value.hue = Math.min(Math.round(huesettings.hue * 65535 / 100), 65535)
+        if (huesettings.saturation != null)   
+            value.sat = Math.min(Math.round(huesettings.saturation * 255 / 100), 255)
+    }
+ 
+    // Default behavior is to turn light on 
+    value.on = true
+ 
+	if (huesettings.level != null) {
+        if (huesettings.level <= 0) { value.on = false }
+        else if (huesettings.level == 1) { value.bri = 1 }
+        else { value.bri = Math.min(Math.round(huesettings.level * 255 / 100), 255) }
+	}
+	value.alert = huesettings.alert ? huesettings.alert : "none"
+	if (huesettings.transitiontime != null) { value.transitiontime = huesettings.transitiontime * 10 }
 
-	def value = [sat: sat, hue: hue]
-	if (color.level != null) {
-		value.bri = Math.min(Math.round(color.level * 255 / 100), 255)
-		value.on = value.bri > 0
-	}
-	if (color.transitiontime != null)
-	{
-		value.transitiontime = color.transitiontime * 10
-	}
-
-	if (color.switch) {
-		value.on = color.switch == "on"
-	}
+    // Make sure to turn off light if requested
+    if (huesettings.switch == "off") { value.on = false }
 
 	childDevice?.log "sending command $value"
 	put("${deviceType}/${getId(childDevice)}/${api}", value)
+	return "Color set to $value"
 }
 
 def setGroupScene(childDevice, Number inGroupID) {
@@ -1068,11 +1080,8 @@ def nextLevel(childDevice) {
 	def level = device.latestValue("level") as Integer ?: 0
 	if (level < 100) {
 		level = Math.min(25 * (Math.round(level / 25) + 1), 100) as Integer
-	}
-	else {
-		level = 25
-	}
-	setLevel(childDevice,level)
+	} else { level = 25	}
+	setLevel(childDevice, level)
 }
 
 def getId(childDevice) {
@@ -1273,16 +1282,14 @@ private getHextoXY(String colorStr) {
 
     // Make green more vivid
     if (normalizedToOne[1] > 0.04045) {
-        green = (float) Math.pow((normalizedToOne[1] + 0.055)
-                / (1.0 + 0.055), 2.4);
+        green = (float) Math.pow((normalizedToOne[1] + 0.055) / (1.0 + 0.055), 2.4);
     } else {
         green = (float) (normalizedToOne[1] / 12.92);
     }
 
     // Make blue more vivid
     if (normalizedToOne[2] > 0.04045) {
-        blue = (float) Math.pow((normalizedToOne[2] + 0.055)
-                / (1.0 + 0.055), 2.4);
+        blue = (float) Math.pow((normalizedToOne[2] + 0.055) / (1.0 + 0.055), 2.4);
     } else {
         blue = (float) (normalizedToOne[2] / 12.92);
     }
@@ -1291,8 +1298,8 @@ private getHextoXY(String colorStr) {
     float Y = (float) (red * 0.234327 + green * 0.743075 + blue * 0.022598);
     float Z = (float) (red * 0.0000000 + green * 0.053077 + blue * 1.035763);
 
-    float x = X / (X + Y + Z);
-    float y = Y / (X + Y + Z);
+    float x = (X != 0 ? X / (X + Y + Z) : 0);
+    float y = (Y != 0 ? Y / (X + Y + Z) : 0);
 
     double[] xy = new double[2];
     xy[0] = x;

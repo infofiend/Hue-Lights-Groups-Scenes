@@ -147,56 +147,84 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() }
 	
 	log.debug "Executing 'setLevel'"
-	parent.setLevel(this, percent, transitionTime, deviceType)
-	sendEvent(name: "switch", value: "on", isStateChange: true)
-    sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
-	sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
+	if (verifyPercent(percent)) {
+		parent.setLevel(this, percent, transitionTime, deviceType)
+		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
+		sendEvent(name: "switch", value: "on", isStateChange: true)
+		sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
+	}
 }
 
 void setSaturation(percent, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() }
 
 	log.debug "Executing 'setSaturation'"
-	parent.setSaturation(this, percent, transitionTime, deviceType)
-	sendEvent(name: "saturation", value: percent, displayed: false, isStateChange: true)
-	sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
+	if (verifyPercent(percent)) {
+		parent.setSaturation(this, percent, transitionTime, deviceType)
+		sendEvent(name: "saturation", value: percent, displayed: false, isStateChange: true)
+		sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
+	}
 }
 
 void setHue(percent, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() }
     
 	log.debug "Executing 'setHue'"
-	parent.setHue(this, percent, transitionTime, deviceType)
-	sendEvent(name: "hue", value: percent, displayed: false, isStateChange: true)
-	sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
+	if (verifyPercent(percent)) {
+		parent.setHue(this, percent, transitionTime, deviceType)
+		sendEvent(name: "hue", value: percent, displayed: false, isStateChange: true)
+		sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
+	}
 }
 
 void setColor(value) {
 	log.debug "setColor: ${value}, $this"
-    def isOff = false
+    def events = []
+    def validValues = [:]
 
-	if(value.transitionTime) { sendEvent(name: "transitionTime", value: value.transitionTime, isStateChange: true) }
-	else {
+	if(value.transitionTime) {
+		events << createEvent(name: "transitionTime", value: value.transitionTime, isStateChange: true)
+		validValues.transitionTime = value.transitionTime
+	} else {
     	def transitionTime = device.currentValue("transitionTime")
 	    if(transitionTime == null) { transitionTime = parent.getSelectedTransition() }
-		sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
-		value << [transitionTime: transitionTime]
+		events << createEvent(name: "transitionTime", value: value.transitionTime, isStateChange: true)
+		validValues.transitionTime = value.transitionTime
 	}
-	if (value.hex) { sendEvent(name: "color", value: value.hex, isStateChange: true) } 
-	if (value.hue) { sendEvent(name: "hue", value: value.hue, displayed: false, isStateChange: true) }
-	if (value.saturation) { sendEvent(name: "saturation", value: value.saturation, displayed: false, isStateChange: true) }
-	if (value.level) { sendEvent(name: "level", value: value.level, descriptionText: "Level has changed to ${value.level}%", isStateChange: true) }
-    else {
-    	// sendEvent(name: "level", value: 1)
-        value.level = 1
-        value.transitionTime = 0
-        isOff = true
+	if (verifyPercent(value.hue)) {
+		events << createEvent(name: "hue", value: value.hue, displayed: false, isStateChange: true)
+		validValues.hue = value.hue
+	}
+	if (verifyPercent(value.saturation)) {
+		events << createEvent(name: "saturation", value: value.saturation, displayed: false, isStateChange: true)
+		validValues.saturation = value.saturation
+	}
+	if (value.hex != null) {
+		if (value.hex ==~ /^\#([A-Fa-f0-9]){6}$/) {
+			events << createEvent(name: "color", value: value.hex, isStateChange: true)
+			validValues.hex = value.hex
+		} else {
+            log.warn "$value.hex is not a valid color"
+        }
+	}
+	if (verifyPercent(value.level)) {
+		events << createEvent(name: "level", value: value.level, descriptionText: "Level has changed to ${value.level}%", isStateChange: true)
+		validValues.level = value.level
+	}
+    if (value.switch == "off" || (value.level != null && value.level <= 0)) {
+        events << createEvent(name: "switch", value: "off", isStateChange: true)
+        validValues.switch = "off"
+    } else {
+    	events << createEvent(name: "switch", value: "on", isStateChange: true)
+		validValues.switch = "on"
     }
 	
-	sendEvent(name: "switch", value: "on", isStateChange: true)
-
-	parent.setColor(this, value, deviceType)
-    if (isOff) { parent.off(this, 0, deviceType) }
+	if (!events.isEmpty()) {
+		parent.setColor(this, validValues, deviceType)
+	}
+    events.each {
+        sendEvent(it)
+    }
 }
 
 void reset() {
@@ -213,7 +241,9 @@ void setAdjustedColor(value) {
         // Needed because color picker always sends 100
         adjusted.level = device.currentValue("level") // null 
         setColor(adjusted)
-    }
+    } else {
+		log.warn "Invalid color input"
+	}
 }
 
 void setColorTemperature(value, transitionTime = device.currentValue("transitionTime")) {
@@ -224,6 +254,9 @@ void setColorTemperature(value, transitionTime = device.currentValue("transition
         parent.setColorTemperature(this, value, transitionTime, deviceType)
         sendEvent(name: "colorTemperature", value: value, isStateChange: true)
 		sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
+		sendEvent(name: "switch", value: "on", isStateChange: true)
+	} else {
+		log.warn "Invalid color temperature"
 	}
 }
 
@@ -247,6 +280,17 @@ def adjustOutgoingHue(percent) {
 	}
 	log.info "percent: $percent, adjusted: $adjusted"
 	adjusted
+}
+
+def verifyPercent(percent) {
+    if (percent == null)
+        return false
+    else if (percent >= 0 && percent <= 100) {
+        return true
+    } else {
+        log.warn "$percent is not 0-100"
+        return false
+    }
 }
 
 def log(message, level = "trace") {
