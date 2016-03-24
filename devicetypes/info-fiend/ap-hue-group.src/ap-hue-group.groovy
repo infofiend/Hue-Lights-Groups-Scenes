@@ -76,8 +76,8 @@ metadata {
         controlTile("transitionTimeSliderControl", "device.transitionTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") { 
         	state "setTransitionTime", action:"setTransitionTime", backgroundColor:"#d04e00"
 		}
-		valueTile("valueTT", "device.transTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
-			state "transTime", label: 'Transition    Time: ${currentValue}'
+		valueTile("transTime", "device.transitionTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+			state "transitionTime", label: 'Transition    Time: ${currentValue}'
         }
 
 		valueTile("groupID", "device.groupID", inactiveLabel: false, decoration: "flat") {
