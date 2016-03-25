@@ -205,7 +205,7 @@ void setColor(value) {
 	} else {
     	def transitionTime = device.currentValue("transitionTime")
 	    if(transitionTime == null) { transitionTime = parent.getSelectedTransition() }
-		events << createEvent(name: "transitionTime", value: value.transitionTime, isStateChange: true)
+		events << createEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
 		validValues.transitionTime = value.transitionTime
 	}
 	if (verifyPercent(value.hue)) {
