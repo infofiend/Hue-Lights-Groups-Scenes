@@ -163,8 +163,8 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
 	log.debug "Executing 'setLevel'"
 	if (verifyPercent(percent)) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
-		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
 		sendEvent(name: "switch", value: "on")
+		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
 	}
 }
 
@@ -174,7 +174,7 @@ void setSaturation(percent, transitionTime = device.currentValue("transitionTime
 	log.debug "Executing 'setSaturation'"
 	if (verifyPercent(percent)) {
 		parent.setSaturation(this, percent, transitionTime, deviceType)
-		sendEvent(name: "saturation", value: percent, displayed: false, isStateChange: true)
+		sendEvent(name: "saturation", value: percent, isStateChange: true)
 		sendEvent(name: "colormode", value: "hs", displayed: false)
 	}
 }
@@ -185,7 +185,7 @@ void setHue(percent, transitionTime = device.currentValue("transitionTime")) {
 	log.debug "Executing 'setHue'"
 	if (verifyPercent(percent)) {
 		parent.setHue(this, percent, transitionTime, deviceType)
-		sendEvent(name: "hue", value: percent, displayed: false, isStateChange: true)
+		sendEvent(name: "hue", value: percent, isStateChange: true)
 		sendEvent(name: "colormode", value: "hs", displayed: false)
 	}
 }
@@ -203,12 +203,12 @@ void setColor(value) {
 		validValues.transitionTime = value.transitionTime
 	}
 	if (verifyPercent(value.hue)) {
-		events << createEvent(name: "hue", value: value.hue, displayed: false, isStateChange: true)
+		events << createEvent(name: "hue", value: value.hue, isStateChange: true)
 		events << createEvent(name: "colormode", value: "hs", displayed: false)
 		validValues.hue = value.hue
 	}
 	if (verifyPercent(value.saturation)) {
-		events << createEvent(name: "saturation", value: value.saturation, displayed: false, isStateChange: true)
+		events << createEvent(name: "saturation", value: value.saturation, isStateChange: true)
 		events << createEvent(name: "colormode", value: "hs", displayed: false,)
 		validValues.saturation = value.saturation
 	}
@@ -266,9 +266,9 @@ void setColorTemperature(value, transitionTime = device.currentValue("transition
 	if (value) {
         log.trace "setColorTemperature: ${value}k"
         parent.setColorTemperature(this, value, transitionTime, deviceType)
-        sendEvent(name: "colorTemperature", value: value, isStateChange: true)
-		sendEvent(name: "colormode", value: "ct", displayed: false)
 		sendEvent(name: "switch", value: "on")
+		sendEvent(name: "colorTemperature", value: value, isStateChange: true)
+		sendEvent(name: "colormode", value: "ct", displayed: false)
 	} else {
 		log.warn "Invalid color temperature"
 	}
@@ -337,7 +337,7 @@ def getDeviceType() { return "groups" }
 
 void initialize(hueID) {
     log.debug "Initializing with ID ${hueID}"
-    sendEvent(name: "hueID", value: "${hueID}")
+    sendEvent(name: "hueID", value: "${hueID}", displayed: false)
 }
 
 void alert(value) {

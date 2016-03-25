@@ -123,7 +123,7 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
 	log.debug "Executing 'setLevel'"
 	if (percent != null && percent >= 0 && percent <= 100) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
-		sendEvent(name: "switch", "on")
+		sendEvent(name: "switch", value: "on")
 		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
 	} else {
 		log.warn "$percent is not 0-100"
@@ -173,7 +173,7 @@ def getDeviceType() { return "lights" }
 
 void initialize(hueID) {
     log.debug "Initializing with ID ${hueID}"
-    sendEvent(name: "hueID", value: "${hueID}")
+    sendEvent(name: "hueID", value: "${hueID}", displayed: false)
 }
 
 void alert(value) {
