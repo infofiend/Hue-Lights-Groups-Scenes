@@ -99,7 +99,6 @@ void on(transitionTime = device.currentValue("transitionTime")) {
     
 	parent.on(this, transitionTime, level, deviceType)
 	sendEvent(name: "switch", value: "on", isStateChange: true)
-	sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
 }
 
 void off(transitionTime = device.currentValue("transitionTime")) {
@@ -107,7 +106,6 @@ void off(transitionTime = device.currentValue("transitionTime")) {
     
 	parent.off(this, transitionTime, deviceType)
 	sendEvent(name: "switch", value: "off", isStateChange: true)
-	sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
 }
 
 void nextLevel(transitionTime = device.currentValue("transitionTime")) {
@@ -127,7 +125,6 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
 		sendEvent(name: "switch", "on", isStateChange: true)
 		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
-		sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
 	} else {
 		log.warn "$percent is not 0-100"
 	}

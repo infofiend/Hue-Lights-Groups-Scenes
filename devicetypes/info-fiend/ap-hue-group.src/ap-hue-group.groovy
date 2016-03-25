@@ -138,7 +138,6 @@ void on(transitionTime = device.currentValue("transitionTime")) {
 	
 	parent.on(this, transitionTime, level, deviceType)
 	sendEvent(name: "switch", value: "on")
-	sendEvent(name: "transitionTime", value: transitionTime)
 }
 
 void off(transitionTime = device.currentValue("transitionTime")) {
@@ -147,7 +146,6 @@ void off(transitionTime = device.currentValue("transitionTime")) {
     parent.off(this, transitionTime, deviceType)
 	sendEvent(name: "switch", value: "off")
     sendEvent(name: "effect", value: "none")
-	sendEvent(name: "transitionTime", value: transitionTime)
 }
 
 void nextLevel(transitionTime = device.currentValue("transitionTime")) {
@@ -167,7 +165,6 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
 		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%")
 		sendEvent(name: "switch", value: "on", isStateChange: true)
-		sendEvent(name: "transitionTime", value: transitionTime)
 	}
 }
 
@@ -179,7 +176,6 @@ void setSaturation(percent, transitionTime = device.currentValue("transitionTime
 		parent.setSaturation(this, percent, transitionTime, deviceType)
 		sendEvent(name: "saturation", value: percent, displayed: false)
 		sendEvent(name: "colormode", value: "hs", displayed: false, isStateChange: true)
-		sendEvent(name: "transitionTime", value: transitionTime)
 	}
 }
 
@@ -191,7 +187,6 @@ void setHue(percent, transitionTime = device.currentValue("transitionTime")) {
 		parent.setHue(this, percent, transitionTime, deviceType)
 		sendEvent(name: "hue", value: percent, displayed: false)
 		sendEvent(name: "colormode", value: "hs", displayed: false, isStateChange: true)
-		sendEvent(name: "transitionTime", value: transitionTime)
 	}
 }
 
@@ -201,12 +196,10 @@ void setColor(value) {
     def validValues = [:]
 
 	if(value.transitionTime) {
-		events << createEvent(name: "transitionTime", value: value.transitionTime)
 		validValues.transitionTime = value.transitionTime
 	} else {
     	def transitionTime = device.currentValue("transitionTime")
 	    if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
-		events << createEvent(name: "transitionTime", value: transitionTime)
 		validValues.transitionTime = value.transitionTime
 	}
 	if (verifyPercent(value.hue)) {
@@ -275,7 +268,6 @@ void setColorTemperature(value, transitionTime = device.currentValue("transition
         parent.setColorTemperature(this, value, transitionTime, deviceType)
         sendEvent(name: "colorTemperature", value: value, isStateChange: true)
 		sendEvent(name: "colormode", value: "ct", displayed: false, isStateChange: true)
-		sendEvent(name: "transitionTime", value: transitionTime)
 		sendEvent(name: "switch", value: "on", isStateChange: true)
 	} else {
 		log.warn "Invalid color temperature"
