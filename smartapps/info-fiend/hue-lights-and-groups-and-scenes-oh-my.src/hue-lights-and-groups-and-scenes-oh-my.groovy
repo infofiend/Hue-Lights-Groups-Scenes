@@ -210,7 +210,7 @@ private sendDeveloperReq() {
 		headers: [
 			HOST: bridgeHostnameAndPort
 		],
-		body: [devicetype: "$token-0", username: "$token-0"]], bridgeDni))
+		body: [devicetype: "$token-0"]], bridgeDni))
 }
 
 private discoverHueBulbs() {
