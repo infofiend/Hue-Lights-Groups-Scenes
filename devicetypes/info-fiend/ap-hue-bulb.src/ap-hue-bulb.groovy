@@ -127,7 +127,7 @@ def parse(description) {
 // handle commands
 void setTransitionTime(transitionTime) {
 	log.debug "Executing 'setTransitionTime': transition time is now ${transitionTime}."
-	sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
+	sendEvent(name: "transitionTime", value: transitionTime, descriptionText: "Transition time has been set to ${transitionTime} second(s)", isStateChange: true)
 }
 
 void on(transitionTime = device.currentValue("transitionTime")) {
@@ -137,15 +137,15 @@ void on(transitionTime = device.currentValue("transitionTime")) {
     if(level == null) { level = 100 }
 
 	parent.on(this, transitionTime, level, deviceType)
-	sendEvent(name: "switch", value: "on", isStateChange: true)
+	sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on", isStateChange: true)
 }
 
 void off(transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
     
 	parent.off(this, transitionTime, deviceType)
-	sendEvent(name: "switch", value: "off", isStateChange: true)
-    sendEvent(name: "effect", value: "none")
+	sendEvent(name: "switch", value: "off", descriptionText: "Has been turned off", isStateChange: true)
+    sendEvent(name: "effect", value: "none", descriptionText: "Colorloop has been turned off")
 }
 
 void nextLevel(transitionTime = device.currentValue("transitionTime")) {
@@ -163,7 +163,7 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
 	log.debug "Executing 'setLevel'"
 	if (verifyPercent(percent)) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
-		sendEvent(name: "switch", value: "on")
+		sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
 		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
 	}
 }
@@ -174,7 +174,7 @@ void setSaturation(percent, transitionTime = device.currentValue("transitionTime
 	log.debug "Executing 'setSaturation'"
 	if (verifyPercent(percent)) {
 		parent.setSaturation(this, percent, transitionTime, deviceType)
-		sendEvent(name: "saturation", value: percent, isStateChange: true)
+		sendEvent(name: "saturation", value: percent, descriptionText: "Saturation has changed to ${percent}%", isStateChange: true)
 		sendEvent(name: "colormode", value: "hs", displayed: false)
 	}
 }
@@ -185,7 +185,7 @@ void setHue(percent, transitionTime = device.currentValue("transitionTime")) {
 	log.debug "Executing 'setHue'"
 	if (verifyPercent(percent)) {
 		parent.setHue(this, percent, transitionTime, deviceType)
-		sendEvent(name: "hue", value: percent, isStateChange: true)
+		sendEvent(name: "hue", value: percent, descriptionText: "Hue has changed to ${percent}%", isStateChange: true)
 		sendEvent(name: "colormode", value: "hs", displayed: false)
 	}
 }
@@ -203,18 +203,18 @@ void setColor(value) {
 		validValues.transitionTime = value.transitionTime
 	}
 	if (verifyPercent(value.hue)) {
-		events << createEvent(name: "hue", value: value.hue, isStateChange: true)
+		events << createEvent(name: "hue", value: value.hue, descriptionText: "Hue has changed to ${value.hue}%", isStateChange: true)
 		events << createEvent(name: "colormode", value: "hs", displayed: false)
 		validValues.hue = value.hue
 	}
 	if (verifyPercent(value.saturation)) {
-		events << createEvent(name: "saturation", value: value.saturation, isStateChange: true)
+		events << createEvent(name: "saturation", value: value.saturation, descriptionText: "Saturation has changed to ${value.saturation}%", isStateChange: true)
 		events << createEvent(name: "colormode", value: "hs", displayed: false)
 		validValues.saturation = value.saturation
 	}
 	if (value.hex != null) {
 		if (value.hex ==~ /^\#([A-Fa-f0-9]){6}$/) {
-			events << createEvent(name: "color", value: value.hex, isStateChange: true)
+			events << createEvent(name: "color", value: value.hex, descriptionText: "Color has changed to ${value.hex}", isStateChange: true)
 			events << createEvent(name: "colormode", value: "xy", displayed: false)
 			validValues.hex = value.hex
 		} else {
@@ -226,10 +226,10 @@ void setColor(value) {
 		validValues.level = value.level
 	}
     if (value.switch == "off" || (value.level != null && value.level <= 0)) {
-        events << createEvent(name: "switch", value: "off")
+        events << createEvent(name: "switch", value: "off", descriptionText: "Has been turned off")
         validValues.switch = "off"
     } else {
-    	events << createEvent(name: "switch", value: "on")
+    	events << createEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
 		validValues.switch = "on"
     }
 	
@@ -266,8 +266,8 @@ void setColorTemperature(value, transitionTime = device.currentValue("transition
 	if (value) {
         log.trace "setColorTemperature: ${value}k"
         parent.setColorTemperature(this, value, transitionTime, deviceType)
-        sendEvent(name: "switch", value: "on")
-		sendEvent(name: "colorTemperature", value: value, isStateChange: true)
+        sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
+		sendEvent(name: "colorTemperature", value: value, descriptionText: "Color temperature has changed to ${value}K", isStateChange: true)
 		sendEvent(name: "colormode", value: "ct", displayed: false)
 	} else {
 		log.warn "Invalid color temperature"
@@ -357,14 +357,14 @@ void colorloopOn() {
 	}
 	parent.setEffect(this, "colorloop", deviceType)
     
-    sendEvent(name: "switch", value: "on")
-    sendEvent(name: "effect", value: "colorloop", isStateChange: true)
+    sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
+    sendEvent(name: "effect", value: "colorloop", descriptionText: "Colorloop has been turned on", isStateChange: true)
 }
 
 void colorloopOff() {
     log.debug "Executing 'colorloopOff'"
     parent.setEffect(this, "none", deviceType)
-    sendEvent(name: "effect", value: "none", isStateChange: true)
+    sendEvent(name: "effect", value: "none", descriptionText: "Colorloop has been turned off", isStateChange: true)
 }
 
 void bri_inc(value) {

@@ -88,7 +88,7 @@ def parse(description) {
 // handle commands
 void setTransitionTime(transitionTime) {
 	log.debug "Executing 'setTransitionTime': transition time is now ${transitionTime}."
-	sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
+	sendEvent(name: "transitionTime", value: transitionTime, descriptionText: "Transition time has been set to ${transitionTime} second(s)", isStateChange: true)
 }
 
 void on(transitionTime = device.currentValue("transitionTime")) {
@@ -98,14 +98,14 @@ void on(transitionTime = device.currentValue("transitionTime")) {
     if(level == null) { level = 100 }
     
 	parent.on(this, transitionTime, level, deviceType)
-	sendEvent(name: "switch", value: "on", isStateChange: true)
+	sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on", isStateChange: true)
 }
 
 void off(transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() }
     
 	parent.off(this, transitionTime, deviceType)
-	sendEvent(name: "switch", value: "off", isStateChange: true)
+	sendEvent(name: "switch", value: "off", descriptionText: "Has been turned off", isStateChange: true)
 }
 
 void nextLevel(transitionTime = device.currentValue("transitionTime")) {
@@ -123,7 +123,7 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
 	log.debug "Executing 'setLevel'"
 	if (percent != null && percent >= 0 && percent <= 100) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
-		sendEvent(name: "switch", value: "on")
+		sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
 		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
 	} else {
 		log.warn "$percent is not 0-100"
