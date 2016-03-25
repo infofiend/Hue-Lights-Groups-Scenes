@@ -146,7 +146,7 @@ void off(transitionTime = device.currentValue("transitionTime")) {
     
 	parent.off(this, transitionTime, deviceType)
 	sendEvent(name: "switch", value: "off")
-    sendEvent(name: "effect", value: "none, isStateChange: true
+    sendEvent(name: "effect", value: "none", isStateChange: true)
 	sendEvent(name: "transitionTime", value: transitionTime)
 }
 
