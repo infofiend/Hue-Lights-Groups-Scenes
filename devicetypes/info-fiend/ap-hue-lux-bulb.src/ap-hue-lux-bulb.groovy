@@ -3,7 +3,7 @@
  *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  */
- 
+
 // for the UI
 metadata {
 	// Automatically generated. Make future change here.
@@ -14,13 +14,13 @@ metadata {
 		capability "Polling"
 		capability "Refresh"
 		capability "Sensor"
-        
+
         command "refresh"
         command "setTransitionTime"
 		command "alert"
 		command "bri_inc"
         command "log", ["string","string"]
-        
+
         attribute "transitionTime", "NUMBER"
         attribute "hueID", "NUMBER"
 	}
@@ -32,10 +32,10 @@ metadata {
 	tiles(scale: 2) {
         multiAttributeTile(name:"rich-control", type: "lighting", canChangeIcon: true){
             tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
-              attributeState "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
-              attributeState "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
-              attributeState "turningOn", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#79b821", nextState:"turningOff"
-              attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#ffffff", nextState:"turningOn"
+              attributeState "on", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#00A0DC", nextState:"turningOff"
+              attributeState "off", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#C6C7CC", nextState:"turningOn"
+              attributeState "turningOn", label:'${name}', action:"switch.off", icon:"st.lights.philips.hue-single", backgroundColor:"#00A0DC", nextState:"turningOff"
+              attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#C6C7CC", nextState:"turningOn"
             }
             tileAttribute ("device.level", key: "SLIDER_CONTROL") {
               attributeState "level", action:"switch level.setLevel", range:"(0..100)"
@@ -48,14 +48,14 @@ metadata {
         standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
             state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
         }
-		
-		controlTile("transitionTimeSliderControl", "device.transitionTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") { 
+
+		controlTile("transitionTimeSliderControl", "device.transitionTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") {
         	state "setTransitionTime", action:"setTransitionTime", backgroundColor:"#d04e00"
 		}
 		valueTile("transTime", "device.transitionTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
 			state "transitionTime", label: 'Transition    Time: ${currentValue}'
         }
-		
+
 		valueTile("hueID", "device.hueID", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
 			state "default", label: 'ID: ${currentValue}'
 		}
@@ -96,21 +96,21 @@ void on(transitionTime = device.currentValue("transitionTime")) {
 
 	def level = device.currentValue("level")
     if(level == null) { level = 100 }
-    
+
 	parent.on(this, transitionTime, level, deviceType)
 	sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on", isStateChange: true)
 }
 
 void off(transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() }
-    
+
 	parent.off(this, transitionTime, deviceType)
 	sendEvent(name: "switch", value: "off", descriptionText: "Has been turned off", isStateChange: true)
 }
 
 void nextLevel(transitionTime = device.currentValue("transitionTime")) {
 	if(transitionTime == null) { transitionTime = parent.getSelectedTransition() }
-    
+
     def level = device.latestValue("level") as Integer ?: 0
 	if (level < 100) { level = Math.min(25 * (Math.round(level / 25) + 1), 100) as Integer }
 	else { level = 25 }
@@ -119,7 +119,7 @@ void nextLevel(transitionTime = device.currentValue("transitionTime")) {
 
 void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() }
-       
+
 	log.debug "Executing 'setLevel'"
 	if (percent != null && percent >= 0 && percent <= 100) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
@@ -148,24 +148,24 @@ def log(message, level = "trace") {
     	case "trace":
         	log.trace "LOG FROM PARENT>" + message
             break;
-            
+
     	case "debug":
         	log.debug "LOG FROM PARENT>" + message
             break
-            
+
     	case "warn":
         	log.warn "LOG FROM PARENT>" + message
             break
-            
+
     	case "error":
         	log.error "LOG FROM PARENT>" + message
             break
-            
+
         default:
         	log.error "LOG FROM PARENT>" + message
             break;
-    }            
-    
+    }
+
     return null // always child interface call with a return value
 }
 
