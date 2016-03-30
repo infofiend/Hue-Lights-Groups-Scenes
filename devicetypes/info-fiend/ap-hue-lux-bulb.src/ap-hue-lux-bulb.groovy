@@ -132,7 +132,7 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
 
 void refresh() {
 	log.debug "Executing 'refresh'"
-	parent.poll()
+	parent.manualRefresh()
 }
 
 def poll() {

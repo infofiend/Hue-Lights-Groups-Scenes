@@ -4,7 +4,7 @@
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  *
  */
- 
+
 definition(
     name: "Hue Lights and Groups and Scenes (OH MY)",
     namespace: "info_fiend",
@@ -21,7 +21,7 @@ preferences {
 	page(name:"bridgeDiscovery", title:"Hue Bridge Discovery", content:"bridgeDiscovery", refreshTimeout:5)
 	page(name:"bridgeBtnPush", title:"Linking with your Hue", content:"bridgeLinking", refreshTimeout:5)
 	page(name:"bulbDiscovery", title:"Bulb Discovery", content:"bulbDiscovery", refreshTimeout:5)
-	page(name:"groupDiscovery", title:"Group Discovery", content:"groupDiscovery", refreshTimeout:5)        
+	page(name:"groupDiscovery", title:"Group Discovery", content:"groupDiscovery", refreshTimeout:5)
 	page(name:"sceneDiscovery", title:"Scene Discovery", content:"sceneDiscovery", refreshTimeout:5)
     page(name:"defaultTransition", title:"Default Transition", content:"defaultTransition", refreshTimeout:5)
 }
@@ -113,7 +113,7 @@ def bulbDiscovery()
         discoverHueBulbs()
 //        pause(300)
 //		discoverHueGroups()
-//        pause(300)        
+//        pause(300)
 //        discoverHueScenes()
         log.debug "END BULB DISCOVERY"
 	}
@@ -361,6 +361,7 @@ def installed() {
 def updated() {
 	log.trace "Updated with settings: ${settings}"
 	unsubscribe()
+   unschedule()
 	initialize()
 }
 
@@ -385,19 +386,20 @@ def initialize() {
 		addScenes()
 	}
 	if (selectedHue) {
-		def bridge = getChildDevice(selectedHue)
-		subscribe(bridge, "bulbList", bulbListHandler)
-		subscribe(bridge, "groupList", groupListHandler)
-		subscribe(bridge, "sceneList", sceneListHandler)
-    }
-    runEvery5Minutes("doDeviceSync")
+      def bridge = getChildDevice(selectedHue)
+      subscribe(bridge, "bulbList", bulbListHandler)
+      subscribe(bridge, "groupList", groupListHandler)
+      subscribe(bridge, "sceneList", sceneListHandler)
+   }
+   runEvery5Minutes("doDeviceSync")
+   doDeviceSync()
 }
 
 def manualRefresh() {
-    unschedule()
-	unsubscribe()
-    doDeviceSync()
-    runEvery5Minutes("doDeviceSync")
+   unschedule()
+   unsubscribe()
+   doDeviceSync()
+   runEvery5Minutes("doDeviceSync")
 }
 
 def uninstalled(){
@@ -464,7 +466,7 @@ def addBulbs() {
 					d.initialize(newHueBulb?.value.id)
 				}
 				d.refresh()
-			} else { 
+			} else {
             	//backwards compatable
 				newHueBulb = bulbs.find { (app.id + "/" + it.id) == dni }
 				d = addChildDevice("info_fiend", "AP Hue Bulb", dni, newHueBulb?.hub, ["label":newHueBulb?.name])
@@ -489,20 +491,20 @@ def addGroups() {
 	def groups = getHueGroups()
 	selectedGroups.each { dni ->
 		def d = getChildDevice(dni)
-		if(!d) 
+		if(!d)
 		{
 			def newHueGroup
-			if (groups instanceof java.util.Map) 
+			if (groups instanceof java.util.Map)
 			{
 				newHueGroup = groups.find { (app.id + "/" + it.value.id + "g") == dni }
 				d = addChildDevice("info_fiend", "AP Hue Group", dni, newHueGroup?.value.hub, ["label":newHueGroup?.value.name, "groupID":newHueGroup?.value.id])
 				d.initialize(newHueGroup?.value.id)
-			} 
+			}
 
 			log.debug "created ${d.displayName} with id $dni"
 			d.refresh()
-		} 
-		else 
+		}
+		else
 		{
 			log.debug "found ${d.displayName} with id $dni already exists, type: '$d.typeName'"
 		}
@@ -513,19 +515,19 @@ def addScenes() {
 	def scenes = getHueScenes()
 	selectedScenes.each { dni ->
 		def d = getChildDevice(dni)
-		if(!d) 
+		if(!d)
 		{
 			def newHueScene
-			if (scenes instanceof java.util.Map) 
+			if (scenes instanceof java.util.Map)
 			{
 				newHueScene = scenes.find { (app.id + "/" + it.value.id + "s") == dni }
 				d = addChildDevice("info_fiend", "AP Hue Scene", dni, newHueScene?.value.hub, ["label":newHueScene?.value.name, "sceneID":newHueScene?.value.id])
-			} 
+			}
 
 			log.debug "created ${d.displayName} with id $dni"
 			d.refresh()
-		} 
-		else 
+		}
+		else
 		{
 			log.debug "found ${d.displayName} with id $dni already exists, type: 'Scene'"
 		}
@@ -592,6 +594,7 @@ def locationHandler(evt) {
 					if (it.getDeviceDataByName("mac") == parsedEvent.mac) {
 						log.debug "updating dni for device ${it} with mac ${parsedEvent.mac}"
 						it.setDeviceNetworkId((parsedEvent.ip + ":" + parsedEvent.port)) //could error if device with same dni already exists
+                  doDeviceSync()
 					}
 				}
 			}
@@ -643,14 +646,14 @@ def locationHandler(evt) {
 			else
 			{ //GET /api/${state.username}/lights response (application/json)
             	log.debug "HERE"
-				if (!body.action) 
+				if (!body.action)
 				{ //check if first time poll made it here by mistake
-                
+
                 	if(!body?.type?.equalsIgnoreCase("LightGroup") || !body?.type?.equalsIgnoreCase("Room"))
 					{
 						log.debug "LIGHT GROUP!!!"
 					}
-                    
+
 					def bulbs = getHueBulbs()
 					def groups = getHueGroups()
                     def scenes = getHueScenes()
@@ -666,10 +669,10 @@ def locationHandler(evt) {
 						{
 							bulbs[k] = [id: k, name: v.name, type: v.type, hub:parsedEvent.hub]
 						}
-                        else 
+                        else
                         {
                         	scenes[k] = [id: k, name: v.name, type: "Scene", hub:parsedEvent.hub]
-                        }    
+                        }
 					}
 				}
 			}
@@ -752,20 +755,20 @@ private def parseEventMessage(String description) {
 }
 
 def doDeviceSync(){
-	log.debug "Doing Hue Device Sync!"
+	log.trace "Doing Hue Device Sync!"
 
 	//shrink the large bulb lists
 	convertBulbListToMap()
 	convertGroupListToMap()
 	convertSceneListToMap()
-    
-	if(!state.subscribe) {
-		subscribe(location, null, locationHandler, [filterEvents:false])
-		state.subscribe = true
-	}
 
+   poll()
+   try {
+		subscribe(location, null, locationHandler, [filterEvents:false])
+   } catch (all) {
+      log.trace "Subscription already exist"
+   }
 	discoverBridges()
-    poll()
 }
 
 def isValidSource(macAddress) {
@@ -814,7 +817,7 @@ def parse(childDevice, description) {
 									if (bulb.value.state.colormode) { sendEvent(d.deviceNetworkId, [name: "colormode", value: bulb.value.state.colormode]) }
 		                        } else {
 		                            sendEvent(d.deviceNetworkId, [name: "switch", value: "off"])
-		                            sendEvent(d.deviceNetworkId, [name: "level", value: 100])                     
+		                            sendEvent(d.deviceNetworkId, [name: "level", value: 100])
 		                            if (bulb.value.state.sat) {
 		                                def hue = 23
 		                                def sat = 56
@@ -835,8 +838,8 @@ def parse(childDevice, description) {
 
 	        devices = getChildDevices()
             for (bulb in body) {
-                def d = devices.find{it.deviceNetworkId == "${app.id}/${bulb.key}g"}    
-                if (d) {                
+                def d = devices.find{it.deviceNetworkId == "${app.id}/${bulb.key}g"}
+                if (d) {
 	                if(bulb.value.type == "LightGroup" || bulb.value.type == "Room") {
                 		log.trace "Reading Poll for Groups"
                         sendEvent(d.deviceNetworkId, [name: "switch", value: bulb.value?.action?.on ? "on" : "off"])
@@ -855,10 +858,10 @@ def parse(childDevice, description) {
                         }
                         if (bulb.value.action.effect) { sendEvent(d.deviceNetworkId, [name: "effect", value: bulb.value.action.effect]) }
 						if (bulb.value.action.colormode) { sendEvent(d.deviceNetworkId, [name: "colormode", value: bulb.value.action.colormode]) }
-                    }    
+                    }
                 }
             }
-   		}     
+   		}
 		else
 		{ //put response
 			def hsl = [:]
@@ -948,7 +951,7 @@ def hubVerification(bodytext) {
 def on(childDevice, transitiontime, percent, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-    
+
     def level = Math.min(Math.round(percent * 255 / 100), 255)
 	def value = [on: true, bri: level]
     value.transitiontime = transitiontime * 10
@@ -959,7 +962,7 @@ def on(childDevice, transitiontime, percent, deviceType = "lights") {
 def off(childDevice, transitiontime, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-    
+
 	def value = [on: false]
     value.transitiontime = transitiontime * 10
 	log.debug "Executing 'off'"
@@ -969,7 +972,7 @@ def off(childDevice, transitiontime, deviceType = "lights") {
 def setLevel(childDevice, percent, transitiontime, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-    
+
 	log.debug "Executing 'setLevel'"
 	def level = Math.min(Math.round(percent * 255 / 100), 255)
 	def value = [bri: level, on: percent > 0, transitiontime: transitiontime * 10]
@@ -979,7 +982,7 @@ def setLevel(childDevice, percent, transitiontime, deviceType = "lights") {
 def setSaturation(childDevice, percent, transitiontime, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-    
+
 	log.debug "Executing 'setSaturation($percent)'"
 	def level = Math.min(Math.round(percent * 255 / 100), 255)
 	put("${deviceType}/${getId(childDevice)}/${api}", [sat: level, transitiontime: transitiontime * 10])
@@ -988,7 +991,7 @@ def setSaturation(childDevice, percent, transitiontime, deviceType = "lights") {
 def setHue(childDevice, percent, transitiontime, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-    	
+
 	log.debug "Executing 'setHue($percent)'"
 	def level =	Math.min(Math.round(percent * 65535 / 100), 65535)
 	put("${deviceType}/${getId(childDevice)}/${api}", [hue: level, transitiontime: transitiontime * 10])
@@ -997,7 +1000,7 @@ def setHue(childDevice, percent, transitiontime, deviceType = "lights") {
 def setColorTemperature(childDevice, huesettings, transitionTime, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-    
+
 	log.debug "Executing 'setColorTemperature($huesettings)'"
 	def value = [ct: kelvinToMireks(huesettings), transitiontime: transitionTime * 10, on: true]
 	log.trace "sending command $value"
@@ -1007,25 +1010,25 @@ def setColorTemperature(childDevice, huesettings, transitionTime, deviceType = "
 def setColor(childDevice, huesettings, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-    
+
 	childDevice?.log "Executing 'setColor($huesettings)'"
 	def value = [:]
 	def hue = null
     def sat = null
     def xy = null
-	
+
     if (huesettings.hex != null) {
         value.xy = getHextoXY(huesettings.hex)
     } else {
         if (huesettings.hue != null)
             value.hue = Math.min(Math.round(huesettings.hue * 65535 / 100), 65535)
-        if (huesettings.saturation != null)   
+        if (huesettings.saturation != null)
             value.sat = Math.min(Math.round(huesettings.saturation * 255 / 100), 255)
     }
- 
-    // Default behavior is to turn light on 
+
+    // Default behavior is to turn light on
     value.on = true
- 
+
 	if (huesettings.level != null) {
         if (huesettings.level <= 0) { value.on = false }
         else if (huesettings.level == 1) { value.bri = 1 }
@@ -1048,7 +1051,7 @@ def setGroupScene(childDevice, Number inGroupID) {
     def groupID = inGroupID ?: "0"
 	childDevice?.log "setGroupScene: scene = ${sceneID} "
     String path = "groups/${groupID}/action/"
-    
+
 	childDevice?.log "Path = ${path} "
 
 	put("${path}", [scene: sceneID]) // , transitiontime: inTime * 10])
@@ -1059,16 +1062,16 @@ def setToGroup(childDevice, Number inGroupID ) {
 	def sceneID = getId(childDevice) - "s"
     def groupID = inGroupID ?: "0"
 //    def newTT = inTime as Integer
-    
+
 	childDevice?.log "setToGroup: sceneID = ${sceneID} "
     String gPath = "groups/${groupID}/action/"
-    
+
 //    String sPath = "scenes/${sceneID}/"
-    
+
 //	log.debug "Scene path = ${sPath} "
 
 //	put("${sPath}", [transitiontime: newTT * 10])
-    
+
 	childDevice?.log "Group path = ${gPath} "
 
 	put("${gPath}", [scene: sceneID])
@@ -1093,24 +1096,24 @@ def getId(childDevice) {
 	}
 }
 
-/** 
+/**
 def getSceneId(childDevice) {
 	def scenes = getHueScenes()
 	scenes.each { dni ->
 		def d = getChildDevice(dni)
-		if(d) 
+		if(d)
 		{
 			def hueScene
-			if (scenes instanceof java.util.Map) 
+			if (scenes instanceof java.util.Map)
 			{
 				hueScene = scenes.find { (app.id + "/" + it.value.id + "s") == dni }
 				d = addChildDevice("info_fiend", "AP Hue Scene", dni, newHueScene?.value.hub, ["label":newHueScene?.value.name, "sceneID":newHueScene?.value.id])
-			} 
+			}
 
 			log.debug "created ${d.displayName} with id $dni"
 			d.refresh()
-		} 
-		
+		}
+
 	}
 }
 **/
@@ -1132,16 +1135,16 @@ def updateSceneUsingID(childDevice, sceneID) {
 //	log.trace "updateScene: Scene ${childDevice} requests scene use current light states."
 
 	childDevice?.log "parent.updateSceneUsingID: child's sceneID = ${sceneID} ","debug"
-    childDevice?.log "scenes/${sceneID}/" 
+    childDevice?.log "scenes/${sceneID}/"
 
 //	log.debug "path = ${path} ."
 
 // 	def value = [storelightstate: true]
 //	log.debug "updateSceneUsingID: first attempt: "
 //	put("scenes/${sceneID}/", value)
-    
-	childDevice?.log "updateSceneUsingID: first attempt " 
-    
+
+	childDevice?.log "updateSceneUsingID: first attempt "
+
    	put("${path}", ["storelightstate": true])
 }
 
@@ -1150,13 +1153,13 @@ def updateTransTime(childDevice, newTT) {
 	def sceneID = getId(childDevice) - "s"
 	log.debug "updateTransTime: new transition time of ${newTT} for Scene ${sceneID}."
     def transTime = newTT * 10
-    
+
     String path = "scenes/${sceneID}/"
-    
+
 	log.debug "Path = ${path} "
 
 	put("${path}", [transitiontime: transTime])
-    
+
 }
 
 **/
@@ -1167,34 +1170,26 @@ def deleteScene(childDevice) {
 
 	childDevice?.log "deleteScene: sceneID = ${sceneID} "
     String path = "scenes/${sceneID}/"
-    
+
 //	log.debug "Path = ${path} "
 
 	delete("${path}")
 }
 
 private poll() {
-	def uri = "/api/${state.username}/lights/"
-	log.debug "GET:  $uri"
-	sendHubCommand(new physicalgraph.device.HubAction("""GET ${uri} HTTP/1.1
-HOST: ${selectedHue}
+   def host = getBridgeIP()
 
-""", physicalgraph.device.Protocol.LAN, "${selectedHue}"))
-
-	uri = "/api/${state.username}/groups/"
-	log.debug "GET:  $uri"
-	sendHubCommand(new physicalgraph.device.HubAction("""GET ${uri} HTTP/1.1
-HOST: ${selectedHue}
-
-""", physicalgraph.device.Protocol.LAN, "${selectedHue}"))
-
-	uri = "/api/${state.username}/scenes/"
-	log.debug "GET:  $uri"
-	sendHubCommand(new physicalgraph.device.HubAction("""GET ${uri} HTTP/1.1
-HOST: ${selectedHue}
-
-""", physicalgraph.device.Protocol.LAN, "${selectedHue}"))
-
+   def uris = ["/api/${state.username}/lights/", "/api/${state.username}/groups/", "/api/${state.username}/scenes/"]
+   for (uri in uris) {
+      try {
+         sendHubCommand(new physicalgraph.device.HubAction("""GET ${uri} HTTP/1.1
+         HOST: ${host}
+         """, physicalgraph.device.Protocol.LAN, selectedHue))
+      } catch (all) {
+         log.warn "Parsing Body failed - trying again..."
+         doDeviceSync()
+      }
+   }
 }
 
 private put(path, body) {
@@ -1211,7 +1206,7 @@ private put(path, body) {
 		uri = "/api/${state.username}/$path"[0..-1]
 
 	}
-    
+
 	def bodyJSON = new groovy.json.JsonBuilder(body).toString()
 //	def length = bodyJSON.getBytes().size().toString()
 
@@ -1252,6 +1247,35 @@ def getBridgeHostnameAndPort() {
 	}
 	log.trace "result = $result"
 	result
+}
+
+private getBridgeIP() {
+	def host = null
+	if (selectedHue) {
+        def d = getChildDevice(selectedHue)
+    	if (d) {
+        	if (d.getDeviceDataByName("networkAddress"))
+            	host =  d.getDeviceDataByName("networkAddress")
+            else
+        		host = d.latestState('networkAddress').stringValue
+        }
+        if (host == null || host == "") {
+            def serialNumber = selectedHue
+            def bridge = getHueBridges().find { it?.value?.serialNumber?.equalsIgnoreCase(serialNumber) }?.value
+            if (!bridge) {
+            	bridge = getHueBridges().find { it?.value?.mac?.equalsIgnoreCase(serialNumber) }?.value
+            }
+            if (bridge?.ip && bridge?.port) {
+            	if (bridge?.ip.contains("."))
+            		host = "${bridge?.ip}:${bridge?.port}"
+                else
+                	host = "${convertHexToIP(bridge?.ip)}:${convertHexToInt(bridge?.port)}"
+            } else if (bridge?.networkAddress && bridge?.deviceAddress)
+            	host = "${convertHexToIP(bridge?.networkAddress)}:${convertHexToInt(bridge?.deviceAddress)}"
+        }
+        log.trace "Bridge: $selectedHue - Host: $host"
+    }
+    return host
 }
 
 private getHextoXY(String colorStr) {
@@ -1386,7 +1410,7 @@ def getSelectedTransition() {
 def setAlert(childDevice, effect, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-	
+
 	if(effect != "none" && effect != "select" && effect != "lselect") { childDevice?.log "Invalid alert value!" }
     else {
 		def value = [alert: effect]
@@ -1398,7 +1422,7 @@ def setAlert(childDevice, effect, deviceType = "lights") {
 def setEffect(childDevice, effect, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-    
+
 	def value = [effect: effect]
 	childDevice?.log "setEffect: Effect ${effect}."
 	put("${deviceType}/${getId(childDevice)}/${api}", value)
@@ -1407,7 +1431,7 @@ def setEffect(childDevice, effect, deviceType = "lights") {
 def setBri_Inc(childDevice, value, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-	
+
 	if(value < -254 || value > 254) { childDevice?.log "Invalid bri_inc value!" }
 	else {
 		childDevice?.log "setBri_Inc: Value ${value}."
@@ -1418,7 +1442,7 @@ def setBri_Inc(childDevice, value, deviceType = "lights") {
 def setSat_Inc(childDevice, value, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-	
+
 	if(value < -254 || value > 254) { childDevice?.log "Invalid sat_inc value!" }
 	else {
 		childDevice?.log "setSat_Inc: Value ${value}."
@@ -1429,7 +1453,7 @@ def setSat_Inc(childDevice, value, deviceType = "lights") {
 def setHue_Inc(childDevice, value, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-	
+
 	if(value < -65534 || value > 65534) { childDevice?.log "Invalid hue_inc value!" }
 	else {
 		childDevice?.log "setHue_Inc: Value ${value}."
@@ -1440,7 +1464,7 @@ def setHue_Inc(childDevice, value, deviceType = "lights") {
 def setCt_Inc(childDevice, value, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-	
+
 	if(value < -65534 || value > 65534) { childDevice?.log "Invalid ct_inc value!" }
 	else {
 		childDevice?.log "setCt_Inc: Value ${value}."
@@ -1451,7 +1475,7 @@ def setCt_Inc(childDevice, value, deviceType = "lights") {
 def setXy_Inc(childDevice, x, y, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
-	
+
 	if(x > 0.5) { childDevice?.log "Invalid x value!" }
 	else if(y > 0.5) { childDevice?.log "Invalid y value!" }
 	else {

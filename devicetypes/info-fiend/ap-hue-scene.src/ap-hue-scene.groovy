@@ -16,7 +16,7 @@ metadata {
         capability "Sensor"
 		capability "Refresh"
         capability "Polling"
-        
+
         attribute "sceneID", "STRING"
         attribute "getSceneID", "STRING"
         attribute "updateScene", "STRING"
@@ -28,7 +28,7 @@ metadata {
 //        command "deleteScene"
 //        command "setTT"
 		command "log", ["string","string"]
-        
+
     }
 
     // simulator metadata
@@ -45,16 +45,16 @@ metadata {
 	    standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat") {
 			state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
 		}
-        
+
 //    	valueTile("sceneID", "device.sceneID", decoration: "flat", width: 2, height: 1) {
 //			state "sceneID", label: 'HUE sceneID ${currentValue}   '
 //		}
-        
+
     	standardTile("sceneID", "device.sceneID", inactiveLabel: false, decoration: "flat", width: 3, height: 2) { //, defaultState: "State1"
 	       	state "sceneID", label: 'Hue SceneID: ${currentValue}', action:"getSceneID" // , backgroundColor:"#BDE5F2" //, nextState: "State2"
 //		    state "State2", label: 'Retrieving', backgroundColor: "#ffffff", nextState: "State1"
     	}
-        
+
 		standardTile("updateScene", "device.updateScene", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
     	   	state "Ready", label: 'UpdateScene                             ', action:"updateScene", backgroundColor:"#FBB215"
 	    }
@@ -63,19 +63,19 @@ metadata {
 //	    state "Deleting", label: 'Deleting...', backgroundColor: "#ffffff", nextState: "Ready"
 //    }
 
-/**		controlTile("transitiontime", "device.transTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") { 
+/**		controlTile("transitiontime", "device.transTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") {
        		state "setTT", action:"setTT", backgroundColor:"#d04e00"
 		}
-    
+
 		valueTile("valueTT", "device.transTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
 			state "transTime", label: 'Transition    Time: ${currentValue}'
     	}
-    
-**/ 
+
+**/
 	}
     main "switch"
     details (["switch","updateScene","sceneID","refresh"]) //"getSceneID","transitiontime","valueTT",
-    
+
 }
 
 def parse(description) {
@@ -102,7 +102,7 @@ void setTT(transitiontime) {
 	log.debug "Executing 'setTT' for ${device.label}: setting transition time to ${transitiontime}."
 //	parent.updateTransTime(this, transitiontime)
 	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
-    
+
 }
 **/
 
@@ -133,39 +133,39 @@ def setToGroup ( Integer inGroupID ) {
 
 def updateScene() {
 	log.trace "${this}: Update Scene Reached."
-//    def sceneIDfromP = parent.getId(this) 
-    def sceneIDfromD = device.currentValue("sceneID") 
+//    def sceneIDfromP = parent.getId(this)
+    def sceneIDfromD = device.currentValue("sceneID")
 
     log.debug "Retrieved sceneIDfromD: ${sceneIDfromD}."
     String myScene = sceneIDfromD
-    
+
     if (sceneIDfromD == null) {
     	def sceneIDfromP = parent.getID(this) - "s"
-    	log.debug "Retrieved sceneIDfromP: ${sceneIDfromP}."    
+    	log.debug "Retrieved sceneIDfromP: ${sceneIDfromP}."
     }
-   
-    
+
+
 //    parent.updateScene(this)
 //    parent.updateSceneUsingID(this, sceneIDfromP)
     parent.updateSceneUsingID(this, myScene)
-    
+
 
 }
 
 def deleteScene() {
 	log.trace "${this}: Delete Scene Reached."
 	parent.deleteScene(this)
-    
+
 }
 
 def getSceneID() {
  //   log.debug "(this) means ${this} "
-    
-	def sceneIDfromP = parent.getId(this) - "s" 
+
+	def sceneIDfromP = parent.getId(this) - "s"
     def realSceneID = sceneIDfromP - "s"
     log.debug "Retrieved sceneID: ${sceneIDfromP}."
 	log.debug "Real sceneID: ${realSceneID}."
-   
+
     sendEvent(name: "sceneID", value: "${realSceneID}", isStateChange: true)
     // sendEvent(name: "getSceneID", state: "State1", isStateChange: true)
 //	refresh()
@@ -177,7 +177,7 @@ def poll() {
 
 def refresh() {
 	log.debug "Executing 'refresh'"
-	parent.poll()
+	parent.manualRefresh()
 }
 
 
@@ -186,23 +186,23 @@ def log(message, level = "trace") {
     	case "trace":
         	log.trace "LOG FROM PARENT>" + message
             break;
-            
+
     	case "debug":
         	log.debug "LOG FROM PARENT>" + message
             break
-            
+
     	case "warn":
         	log.warn "LOG FROM PARENT>" + message
             break
-            
+
     	case "error":
         	log.error "LOG FROM PARENT>" + message
             break
-            
+
         default:
         	log.error "LOG FROM PARENT>" + message
             break;
-    }            
-    
+    }
+
     return null // always child interface call with a return value
 }
