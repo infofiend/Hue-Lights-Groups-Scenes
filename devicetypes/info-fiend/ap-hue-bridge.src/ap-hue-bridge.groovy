@@ -3,15 +3,15 @@
  *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  */
- 
+
 // for the UI
 metadata {
 	// Automatically generated. Make future change here.
 	definition (name: "AP Hue Bridge", namespace: "info_fiend", author: "SmartThings") {
-		capability "Refresh"  
-        
-		attribute "serialNumber", "string"		
-		attribute "networkAddress", "string"        
+		capability "Refresh"
+
+		attribute "serialNumber", "string"
+		attribute "networkAddress", "string"
 	}
 
 	simulator {
@@ -70,7 +70,7 @@ def parse(description) {
                     boolean isGroup = false
                     boolean isScene = false
                     bgs.each{
-                    	
+
                     	isScene = it.toString().contains( "recycle" )
                         isGroup = it.toString().contains( "lights" )
                     }
@@ -78,7 +78,7 @@ def parse(description) {
 					if (bgs.state) {
 						log.warn "NOT PROCESSED: $msg.body"
 					}
-                    
+
 					else {
 						log.trace "HUE BRIDGE, GENERATING BULB LIST EVENT"
                         if(isScene)
@@ -104,7 +104,7 @@ def parse(description) {
 			}
 		}
 	}
-	results   
+	results
 }
 
 def poll() {
@@ -114,5 +114,5 @@ def poll() {
 
 def refresh() {
 	log.debug "Executing 'refresh'"
-	parent.poll()
+	parent.manualRefresh()
 }
