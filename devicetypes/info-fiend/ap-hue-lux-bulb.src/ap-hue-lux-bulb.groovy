@@ -123,8 +123,7 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
 	log.debug "Executing 'setLevel'"
 	if (percent != null && percent >= 0 && percent <= 100) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
-		if (percent == 0) { sendEvent(name: "switch", value: "off", descriptionText: "Has been turned off") }
-		else { sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on") }
+		sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
 		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
 	} else {
 		log.warn "$percent is not 0-100"

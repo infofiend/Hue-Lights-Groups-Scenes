@@ -2,11 +2,11 @@
  *  AP Hue Bulb
  *
  *	Version 1.3: Added Color Temp slider & valueTile
- *				 Added Transition Time slider & valueTile
+ *				 Added Transition Time slider & valueTile	
  *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  */
-
+ 
 // for the UI
 metadata {
 	// Automatically generated. Make future change here.
@@ -21,8 +21,8 @@ metadata {
 		capability "Sensor"
 
 		command "setAdjustedColor"
-        command "reset"
-        command "refresh"
+        command "reset"        
+        command "refresh"  
         command "setColorTemperature"
         command "setTransitionTime"
 		command "alert"
@@ -33,8 +33,8 @@ metadata {
 		command "hue_inc"
 		command "ct_inc"
 		command "xy_inc"
-		command "log", ["STRING","STRING"]
-
+		command "log", ["STRING","STRING"]        
+        
         attribute "transitionTime", "NUMBER"
         attribute "colorTemperature", "NUMBER"
 		attribute "hueID", "NUMBER"
@@ -78,21 +78,21 @@ metadata {
 		standardTile("refresh", "device.refresh", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
 		}
-
-        controlTile("transitionTimeSliderControl", "device.transitionTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") {
+        
+        controlTile("transitionTimeSliderControl", "device.transitionTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") { 
         	state "setTransitionTime", action:"setTransitionTime", backgroundColor:"#d04e00"
 		}
 		valueTile("transTime", "device.transitionTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
 			state "transitionTime", label: 'Transition    Time: ${currentValue}'
         }
-
+		
 		valueTile("hueID", "device.hueID", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
 			state "default", label: 'ID: ${currentValue}'
 		}
 		valueTile("colormode", "device.colormode", inactiveLabel: false, decoration: "flat", width: 3, height: 1) {
 			state "default", label: 'Colormode: ${currentValue}'
 		}
-
+		
         standardTile("toggleColorloop", "device.effect", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "colorloop", label:"On", action:"colorloopOff", nextState: "updating", icon:"https://raw.githubusercontent.com/infofiend/Hue-Lights-Groups-Scenes/master/smartapp-icons/hue/png/colorloop-on.png"
             state "none", label:"Off", action:"colorloopOn", nextState: "updating", icon:"https://raw.githubusercontent.com/infofiend/Hue-Lights-Groups-Scenes/master/smartapp-icons/hue/png/colorloop-off.png"
@@ -132,7 +132,7 @@ void setTransitionTime(transitionTime) {
 
 void on(transitionTime = device.currentValue("transitionTime")) {
 	if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
-
+    
     def level = device.currentValue("level")
     if(level == null) { level = 100 }
 
@@ -142,7 +142,7 @@ void on(transitionTime = device.currentValue("transitionTime")) {
 
 void off(transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
-
+    
 	parent.off(this, transitionTime, deviceType)
 	sendEvent(name: "switch", value: "off", descriptionText: "Has been turned off", isStateChange: true)
     sendEvent(name: "effect", value: "none", descriptionText: "Colorloop has been turned off")
@@ -150,21 +150,20 @@ void off(transitionTime = device.currentValue("transitionTime")) {
 
 void nextLevel(transitionTime = device.currentValue("transitionTime")) {
 	if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
-
+    
     def level = device.latestValue("level") as Integer ?: 0
 	if (level < 100) { level = Math.min(25 * (Math.round(level / 25) + 1), 100) as Integer }
 	else { level = 25 }
-	setLevel(level, transitionTime)
+	setLevel(level, transitionTime) 
 }
 
 void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
-
+	
 	log.debug "Executing 'setLevel'"
 	if (verifyPercent(percent)) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
-      if (percent == 0) { sendEvent(name: "switch", value: "off", descriptionText: "Has been turned off") }
-		else { sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on") }
+		sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
 		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
 	}
 }
@@ -182,7 +181,7 @@ void setSaturation(percent, transitionTime = device.currentValue("transitionTime
 
 void setHue(percent, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
-
+    
 	log.debug "Executing 'setHue'"
 	if (verifyPercent(percent)) {
 		parent.setHue(this, percent, transitionTime, deviceType)
@@ -233,7 +232,7 @@ void setColor(value) {
     	events << createEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
 		validValues.switch = "on"
     }
-
+	
 	if (!events.isEmpty()) {
 		parent.setColor(this, validValues, deviceType)
 	}
@@ -254,7 +253,7 @@ void setAdjustedColor(value) {
         def adjusted = value + [:]
         adjusted.hue = adjustOutgoingHue(value.hue)
         // Needed because color picker always sends 100
-        adjusted.level = device.currentValue("level") // null
+        adjusted.level = device.currentValue("level") // null 
         setColor(adjusted)
     } else {
 		log.warn "Invalid color input"
@@ -263,7 +262,7 @@ void setAdjustedColor(value) {
 
 void setColorTemperature(value, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
-
+	
 	if (value) {
         log.trace "setColorTemperature: ${value}k"
         parent.setColorTemperature(this, value, transitionTime, deviceType)
@@ -313,24 +312,24 @@ def log(message, level = "trace") {
     	case "trace":
         	log.trace "LOG FROM PARENT>" + message
             break;
-
+            
     	case "debug":
         	log.debug "LOG FROM PARENT>" + message
             break
-
+            
     	case "warn":
         	log.warn "LOG FROM PARENT>" + message
             break
-
+            
     	case "error":
         	log.error "LOG FROM PARENT>" + message
             break
-
+            
         default:
         	log.error "LOG FROM PARENT>" + message
             break;
-    }
-
+    }            
+    
     return null // always child interface call with a return value
 }
 
@@ -346,18 +345,18 @@ void alert(value) {
 	parent.setAlert(this, value, deviceType)
 }
 
-void colorloopOn() {
+void colorloopOn() {   
     log.debug "Executing 'colorloopOn'"
     def dState = device.latestValue("switch") as String ?: "off"
 
-    if (dState == "off") {
+    if (dState == "off") { 
         def level = device.currentValue("level")
 	    if(level == null) { level = 100 }
 
 		parent.on(this, 0, level, deviceType)
 	}
 	parent.setEffect(this, "colorloop", deviceType)
-
+    
     sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
     sendEvent(name: "effect", value: "colorloop", descriptionText: "Colorloop has been turned on", isStateChange: true)
 }
