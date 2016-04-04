@@ -15,14 +15,14 @@ metadata {
 		capability "Refresh"
 		capability "Sensor"
 
-        command "refresh"
-        command "setTransitionTime"
+      command "refresh"
+      command "setTransitionTime"
 		command "alert"
 		command "bri_inc"
-        command "log", ["string","string"]
+      command "log", ["string","string"]
 
-        attribute "transitionTime", "NUMBER"
-        attribute "hueID", "NUMBER"
+      attribute "transitionTime", "NUMBER"
+      attribute "hueID", "NUMBER"
 	}
 
 	simulator {
@@ -121,13 +121,11 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() }
 
 	log.debug "Executing 'setLevel'"
-	if (percent != null && percent >= 0 && percent <= 100) {
+	percent = percent > 0 ? percent : 1
+	if (verifyPercent(percent)) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
-		if (percent == 0) { sendEvent(name: "switch", value: "off", descriptionText: "Has been turned off") }
-		else { sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on") }
+		sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
 		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
-	} else {
-		log.warn "$percent is not 0-100"
 	}
 }
 
@@ -142,6 +140,17 @@ def poll() {
 
 def save() {
 	log.debug "Executing 'save'"
+}
+
+def verifyPercent(percent) {
+    if (percent == null)
+        return false
+    else if (percent >= 1 && percent <= 100) {
+        return true
+    } else {
+        log.warn "$percent is not 1-100"
+        return false
+    }
 }
 
 def log(message, level = "trace") {

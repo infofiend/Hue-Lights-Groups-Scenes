@@ -14,17 +14,17 @@ metadata {
 		capability "Switch Level"
 		capability "Actuator"
 		capability "Color Control"
-        capability "Color Temperature"
+      capability "Color Temperature"
 		capability "Switch"
 		capability "Polling"
 		capability "Refresh"
 		capability "Sensor"
 
 		command "setAdjustedColor"
-        command "reset"
-        command "refresh"
-        command "setColorTemperature"
-        command "setTransitionTime"
+      command "reset"
+      command "refresh"
+      command "setColorTemperature"
+      command "setTransitionTime"
 		command "alert"
 		command "colorloopOn"
 		command "colorloopOff"
@@ -35,11 +35,11 @@ metadata {
 		command "xy_inc"
 		command "log", ["STRING","STRING"]
 
-        attribute "transitionTime", "NUMBER"
-        attribute "colorTemperature", "NUMBER"
+      attribute "transitionTime", "NUMBER"
+      attribute "colorTemperature", "NUMBER"
 		attribute "hueID", "NUMBER"
 		attribute "colormode", "enum", ["xy", "ct", "hs"]
-        attribute "effect", "enum", ["none", "colorloop"]
+      attribute "effect", "enum", ["none", "colorloop"]
 	}
 
 	simulator {
@@ -161,10 +161,10 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
 
 	log.debug "Executing 'setLevel'"
+	percent = percent > 0 ? percent : 1
 	if (verifyPercent(percent)) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
-      if (percent == 0) { sendEvent(name: "switch", value: "off", descriptionText: "Has been turned off") }
-		else { sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on") }
+		sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
 		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
 	}
 }
@@ -300,10 +300,10 @@ def adjustOutgoingHue(percent) {
 def verifyPercent(percent) {
     if (percent == null)
         return false
-    else if (percent >= 0 && percent <= 100) {
+    else if (percent >= 1 && percent <= 100) {
         return true
     } else {
-        log.warn "$percent is not 0-100"
+        log.warn "$percent is not 1-100"
         return false
     }
 }

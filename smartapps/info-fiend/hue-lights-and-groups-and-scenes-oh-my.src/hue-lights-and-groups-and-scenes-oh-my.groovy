@@ -800,7 +800,7 @@ def parse(childDevice, description) {
 	                		log.debug "Reading Poll for Lights"
 		                    if (bulb.value.state.reachable) {
 		                            sendEvent(d.deviceNetworkId, [name: "switch", value: bulb.value?.state?.on ? "on" : "off"])
-		                            sendEvent(d.deviceNetworkId, [name: "level", value: Math.round(bulb.value.state.bri * 100 / 255)])
+		                            sendEvent(d.deviceNetworkId, [name: "level", value: hueToSTLevel(bulb.value.state.bri)])
 		                            if (bulb.value.state.sat) {
 		                                def hue = Math.min(Math.round(bulb.value.state.hue * 100 / 65535), 65535) as int
 		                                def sat = Math.round(bulb.value.state.sat * 100 / 255) as int
@@ -843,7 +843,7 @@ def parse(childDevice, description) {
 	                if(bulb.value.type == "LightGroup" || bulb.value.type == "Room") {
                 		log.trace "Reading Poll for Groups"
                         sendEvent(d.deviceNetworkId, [name: "switch", value: bulb.value?.action?.on ? "on" : "off"])
-                        sendEvent(d.deviceNetworkId, [name: "level", value: Math.round(bulb.value.action.bri * 100 / 255)])
+                        sendEvent(d.deviceNetworkId, [name: "level", value: hueToSTLevel(bulb.value.action.bri)])
                         if (bulb.value.action.sat) {
                             def hue = Math.min(Math.round(bulb.value.action.hue * 100 / 65535), 65535) as int
                             def sat = Math.round(bulb.value.action.sat * 100 / 255) as int
@@ -952,7 +952,7 @@ def on(childDevice, transitiontime, percent, deviceType = "lights") {
 	def api = "state" //lights
     if(deviceType == "groups") { api = "action" }
 
-    def level = Math.min(Math.round(percent * 255 / 100), 255)
+    def level = stToHueLevel(percent)
 	def value = [on: true, bri: level]
     value.transitiontime = transitiontime * 10
 	log.debug "Executing 'on'"
@@ -974,8 +974,8 @@ def setLevel(childDevice, percent, transitiontime, deviceType = "lights") {
     if(deviceType == "groups") { api = "action" }
 
 	log.debug "Executing 'setLevel'"
-	def level = Math.min(Math.round(percent * 255 / 100), 255)
-	def value = [bri: level, on: percent > 0, transitiontime: transitiontime * 10]
+	def level = stToHueLevel(percent)
+	def value = [bri: level, on: true, transitiontime: transitiontime * 10]
 	put("${deviceType}/${getId(childDevice)}/${api}", value)
 }
 
@@ -1030,9 +1030,7 @@ def setColor(childDevice, huesettings, deviceType = "lights") {
     value.on = true
 
 	if (huesettings.level != null) {
-        if (huesettings.level <= 0) { value.on = false }
-        else if (huesettings.level == 1) { value.bri = 1 }
-        else { value.bri = Math.min(Math.round(huesettings.level * 255 / 100), 255) }
+      value.bri = stToHueLevel(huesettings.level)
 	}
 	value.alert = huesettings.alert ? huesettings.alert : "none"
 	if (huesettings.transitiontime != null) { value.transitiontime = huesettings.transitiontime * 10 }
@@ -1490,4 +1488,27 @@ int kelvinToMireks(kelvin) {
 
 int mireksToKelvin(mireks) {
 	return 1000000 / mireks //https://en.wikipedia.org/wiki/Mired
+}
+
+int stToHueLevel(level) {
+   def stMax = 100
+   def stMin = 1
+   def stRange = (stMax - stMin)
+
+   def hueMax = 254
+   def hueMin = 1
+   def hueRange = (hueMax - hueMin)
+   return Math.round((((level - stMin) * hueRange) / stRange) + hueMin)
+}
+
+int hueToSTLevel(level) {
+   def hueMax = 254
+   def hueMin = 1
+   def hueRange = (hueMax - hueMin)
+
+   def stMax = 100
+   def stMin = 1
+   def stRange = (stMax - stMin)
+
+   return Math.round((((level - hueMin) * stRange) / hueRange) + stMin)
 }
