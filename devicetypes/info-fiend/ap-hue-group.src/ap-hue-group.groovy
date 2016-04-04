@@ -2,11 +2,11 @@
  *  AP Hue Group
  *
  *	Version 1.3: Added Color Temp slider & valueTile
- *				 Added Transition Time slider & valueTile	
+ *				 Added Transition Time slider & valueTile
  *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  */
- 
+
 // for the UI
 metadata {
 	// Automatically generated. Make future change here.
@@ -14,7 +14,7 @@ metadata {
 		capability "Switch Level"
 		capability "Actuator"
 		capability "Color Control"
-        capability "Color Temperature"
+      capability "Color Temperature"
 		capability "Switch"
 		capability "Polling"
 		capability "Refresh"
@@ -22,26 +22,26 @@ metadata {
 
 		command "setAdjustedColor"
 		command "reset"
-        command "refresh"
+      command "refresh"
 		command "setColorTemperature"
-        command "setTransitionTime"
+      command "setTransitionTime"
 		command "alert"
-        command "colorloopOn"
-        command "colorloopOff"
+      command "colorloopOn"
+      command "colorloopOff"
 		command "bri_inc"
 		command "sat_inc"
 		command "hue_inc"
 		command "ct_inc"
 		command "xy_inc"
 		command "log", ["string","string"]
-        
+
 		attribute "transitionTime", "NUMBER"
-        attribute "colorTemperature", "NUMBER"
+      attribute "colorTemperature", "NUMBER"
 		attribute "hueID", "NUMBER"
 		attribute "colormode", "enum", ["xy", "ct", "hs"]
 		attribute "effect", "enum", ["none", "colorloop"]
 	}
-	
+
 	simulator {
 		// TODO: define status and reply messages here
 	}
@@ -55,7 +55,7 @@ metadata {
 				attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-multi", backgroundColor:"#C6C7CC", nextState:"turningOn"
 			}
 			tileAttribute ("device.level", key: "SLIDER_CONTROL") {
-				attributeState "level", action:"switch level.setLevel", range:"(0..100)"
+				attributeState "level", action:"switch level.setLevel", range:"(1..100)"
             }
             tileAttribute ("device.level", key: "SECONDARY_CONTROL") {
 	            attributeState "level", label: 'Level ${currentValue}%'
@@ -78,8 +78,8 @@ metadata {
 		standardTile("refresh", "device.refresh", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
 		}
-		
-        controlTile("transitionTimeSliderControl", "device.transitionTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") { 
+
+        controlTile("transitionTimeSliderControl", "device.transitionTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") {
         	state "setTransitionTime", action:"setTransitionTime", backgroundColor:"#d04e00"
 		}
 		valueTile("transTime", "device.transitionTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
@@ -92,14 +92,14 @@ metadata {
 		valueTile("colormode", "device.colormode", inactiveLabel: false, decoration: "flat", width: 3, height: 1) {
 			state "default", label: 'Colormode: ${currentValue}'
 		}
-		
+
 		standardTile("toggleColorloop", "device.effect", height: 2, width: 2, inactiveLabel: false, decoration: "flat") {
 			state "colorloop", label:"On", action:"colorloopOff", nextState: "updating", icon:"https://raw.githubusercontent.com/infofiend/Hue-Lights-Groups-Scenes/master/smartapp-icons/hue/png/colorloop-on.png"
             state "none", label:"Off", action:"colorloopOn", nextState: "updating", icon:"https://raw.githubusercontent.com/infofiend/Hue-Lights-Groups-Scenes/master/smartapp-icons/hue/png/colorloop-off.png"
             state "updating", label:"Working", icon: "st.secondary.secondary"
 		}
 	}
-	
+
 	main(["rich-control"])
 	details(["rich-control", "colorTempSliderControl", "colorTemp", "transitionTimeSliderControl", "transTime", "toggleColorloop", "refresh", "reset", "hueID", "colormode"])
 
@@ -132,17 +132,17 @@ void setTransitionTime(transitionTime) {
 
 void on(transitionTime = device.currentValue("transitionTime")) {
 	if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
-    
+
     def level = device.currentValue("level")
     if(level == null) { level = 100 }
-	
+
 	parent.on(this, transitionTime, level, deviceType)
 	sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on", isStateChange: true)
 }
 
 void off(transitionTime = device.currentValue("transitionTime")) {
-    if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 } 
-	
+    if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
+
     parent.off(this, transitionTime, deviceType)
 	sendEvent(name: "switch", value: "off", descriptionText: "Has been turned off", isStateChange: true)
     sendEvent(name: "effect", value: "none", descriptionText: "Colorloop has been turned off")
@@ -150,7 +150,7 @@ void off(transitionTime = device.currentValue("transitionTime")) {
 
 void nextLevel(transitionTime = device.currentValue("transitionTime")) {
 	if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
-    
+
     def level = device.latestValue("level") as Integer ?: 0
 	if (level < 100) { level = Math.min(25 * (Math.round(level / 25) + 1), 100) as Integer }
 	else { level = 25 }
@@ -181,7 +181,7 @@ void setSaturation(percent, transitionTime = device.currentValue("transitionTime
 
 void setHue(percent, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
-    
+
 	log.debug "Executing 'setHue'"
 	if (verifyPercent(percent)) {
 		parent.setHue(this, percent, transitionTime, deviceType)
@@ -232,7 +232,7 @@ void setColor(value) {
     	events << createEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
 		validValues.switch = "on"
     }
-	
+
 	if (!events.isEmpty()) {
 		parent.setColor(this, validValues, deviceType)
 	}
@@ -253,7 +253,7 @@ void setAdjustedColor(value) {
         def adjusted = value + [:]
         adjusted.hue = adjustOutgoingHue(value.hue)
         // Needed because color picker always sends 100
-        adjusted.level = device.currentValue("level") // null 
+        adjusted.level = device.currentValue("level") // null
         setColor(adjusted)
     } else {
 		log.warn "Invalid color input"
@@ -262,7 +262,7 @@ void setAdjustedColor(value) {
 
 void setColorTemperature(value, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() ?: 3 }
-	
+
 	if (value) {
         log.trace "setColorTemperature: ${value}k"
         parent.setColorTemperature(this, value, transitionTime, deviceType)
@@ -299,10 +299,10 @@ def adjustOutgoingHue(percent) {
 def verifyPercent(percent) {
     if (percent == null)
         return false
-    else if (percent >= 0 && percent <= 100) {
+    else if (percent >= 1 && percent <= 100) {
         return true
     } else {
-        log.warn "$percent is not 0-100"
+        log.warn "$percent is not 1-100"
         return false
     }
 }
@@ -312,24 +312,24 @@ def log(message, level = "trace") {
     	case "trace":
         	log.trace "LOG FROM PARENT>" + message
             break;
-            
+
     	case "debug":
         	log.debug "LOG FROM PARENT>" + message
             break
-            
+
     	case "warn":
         	log.warn "LOG FROM PARENT>" + message
             break
-            
+
     	case "error":
         	log.error "LOG FROM PARENT>" + message
             break
-            
+
         default:
         	log.error "LOG FROM PARENT>" + message
             break;
-    }            
-    
+    }
+
     return null // always child interface call with a return value
 }
 
@@ -345,18 +345,18 @@ void alert(value) {
 	parent.setAlert(this, value, deviceType)
 }
 
-void colorloopOn() {   
+void colorloopOn() {
     log.debug "Executing 'colorloopOn'"
     def dState = device.latestValue("switch") as String ?: "off"
 
-    if (dState == "off") { 
+    if (dState == "off") {
         def level = device.currentValue("level")
 	    if(level == null) { level = 100 }
 
 		parent.on(this, 0, level, deviceType)
 	}
 	parent.setEffect(this, "colorloop", deviceType)
-    
+
     sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
     sendEvent(name: "effect", value: "colorloop", descriptionText: "Colorloop has been turned on", isStateChange: true)
 }

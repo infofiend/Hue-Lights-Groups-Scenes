@@ -15,14 +15,14 @@ metadata {
 		capability "Refresh"
 		capability "Sensor"
 
-        command "refresh"
-        command "setTransitionTime"
+      command "refresh"
+      command "setTransitionTime"
 		command "alert"
 		command "bri_inc"
-        command "log", ["string","string"]
+      command "log", ["string","string"]
 
-        attribute "transitionTime", "NUMBER"
-        attribute "hueID", "NUMBER"
+      attribute "transitionTime", "NUMBER"
+      attribute "hueID", "NUMBER"
 	}
 
 	simulator {
@@ -38,7 +38,7 @@ metadata {
               attributeState "turningOff", label:'${name}', action:"switch.on", icon:"st.lights.philips.hue-single", backgroundColor:"#C6C7CC", nextState:"turningOn"
             }
             tileAttribute ("device.level", key: "SLIDER_CONTROL") {
-              attributeState "level", action:"switch level.setLevel", range:"(0..100)"
+              attributeState "level", action:"switch level.setLevel", range:"(1..100)"
             }
             tileAttribute ("device.level", key: "SECONDARY_CONTROL") {
 	            attributeState "level", label: 'Level ${currentValue}%'
@@ -121,12 +121,10 @@ void setLevel(percent, transitionTime = device.currentValue("transitionTime")) {
     if(transitionTime == null) { transitionTime = parent.getSelectedTransition() }
 
 	log.debug "Executing 'setLevel'"
-	if (percent != null && percent >= 0 && percent <= 100) {
+	if (verifyPercent(percent)) {
 		parent.setLevel(this, percent, transitionTime, deviceType)
 		sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
 		sendEvent(name: "level", value: percent, descriptionText: "Level has changed to ${percent}%", isStateChange: true)
-	} else {
-		log.warn "$percent is not 0-100"
 	}
 }
 
@@ -141,6 +139,17 @@ def poll() {
 
 def save() {
 	log.debug "Executing 'save'"
+}
+
+def verifyPercent(percent) {
+    if (percent == null)
+        return false
+    else if (percent >= 1 && percent <= 100) {
+        return true
+    } else {
+        log.warn "$percent is not 1-100"
+        return false
+    }
 }
 
 def log(message, level = "trace") {
