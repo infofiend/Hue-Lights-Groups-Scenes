@@ -1492,7 +1492,7 @@ int mireksToKelvin(mireks) {
 
 int stToHueLevel(level) {
    def stMax = 100
-   def stMin = 1
+   def stMin = 0
    def stRange = (stMax - stMin)
 
    def hueMax = 254
