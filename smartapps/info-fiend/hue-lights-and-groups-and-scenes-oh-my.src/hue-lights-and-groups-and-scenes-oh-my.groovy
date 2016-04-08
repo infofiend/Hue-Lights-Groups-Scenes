@@ -2,8 +2,8 @@
  *  Hue Lights and Groups and Scenes (OH MY) - new Hue Service Manager
  *
  *  Version 1.4:  	Added ability to create / modify / delete Hue Hub Scenes directly from SmartApp
- *					Overhauled communications to / from Hue Hub
- *					Revised child app functions		
+ *			Overhauled communications to / from Hue Hub
+ *			Revised child app functions		
  *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  *
