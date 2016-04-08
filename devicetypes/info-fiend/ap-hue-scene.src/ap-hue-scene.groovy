@@ -2,7 +2,9 @@
  *  AP Hue Scene
  *
  *	Version 1.3: Fixed getSceneID
- *				 Fixed updateScene
+ *		     Fixed updateScene
+ * 
+ * 	Version 1.4: Moved lights info to standard tile
  *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
  */
@@ -20,14 +22,15 @@ metadata {
         attribute "sceneID", "STRING"
         attribute "getSceneID", "STRING"
         attribute "updateScene", "STRING"
-//        attribute "transTime", "NUMBER"
+	attribute "lights", "STRING"
+        attribute "group", "NUMBER"
 
 		command "setToGroup"
         command "updateScene"
         command "getSceneID"
-//        command "deleteScene"
-//        command "setTT"
-		command "log", ["string","string"]
+        command "deleteScene"
+
+		command "log", ["STRING", "STRING"]
 
     }
 
@@ -40,42 +43,31 @@ metadata {
 			tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
 				attributeState "on",  label:'Push', action:"momentary.push", icon:"st.lights.philips.hue-multi", backgroundColor:"#F505F5"
 			}
+		
+//        	tileAttribute ("lights", key: "SECONDARY_CONTROL") {
+//                attributeState "lights", label:'The scene controls Hue lights ${currentValue}.'
+//            }
 		}
-
-	    standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat") {
+    
+	    standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
 			state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
 		}
 
-//    	valueTile("sceneID", "device.sceneID", decoration: "flat", width: 2, height: 1) {
-//			state "sceneID", label: 'HUE sceneID ${currentValue}   '
-//		}
-
     	standardTile("sceneID", "device.sceneID", inactiveLabel: false, decoration: "flat", width: 3, height: 2) { //, defaultState: "State1"
-	       	state "sceneID", label: 'Hue SceneID: ${currentValue}', action:"getSceneID" // , backgroundColor:"#BDE5F2" //, nextState: "State2"
-//		    state "State2", label: 'Retrieving', backgroundColor: "#ffffff", nextState: "State1"
+	       	state "sceneID", label: '${currentValue}  SceneID ', action:"getSceneID", backgroundColor:"#BDE5F2" //, nextState: "State2"
     	}
 
-		standardTile("updateScene", "device.updateScene", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-    	   	state "Ready", label: 'UpdateScene                             ', action:"updateScene", backgroundColor:"#FBB215"
-	    }
-//    standardTile("deleteScene", "device.deleteScene", decoration: "flat", defaultState: "Ready") {
-//       	state "Ready", label: 'Delete Scene', action:"deleteScene", backgroundColor:"#F505F5", nextState: "Deleting"
-//	    state "Deleting", label: 'Deleting...', backgroundColor: "#ffffff", nextState: "Ready"
-//    }
-
-/**		controlTile("transitiontime", "device.transTime", "slider", inactiveLabel: false,  width: 5, height: 1, range:"(0..4)") {
-       		state "setTT", action:"setTT", backgroundColor:"#d04e00"
-		}
-
-		valueTile("valueTT", "device.transTime", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
-			state "transTime", label: 'Transition    Time: ${currentValue}'
-    	}
-
-**/
+	standardTile("updateScene", "device.updateScene", inactiveLabel: false, decoration: "flat", width: 3, height: 2) {
+    	   	state "Ready", label: 'Update   Scene', action:"updateSceneFromDevice", backgroundColor:"#FBB215"
 	}
+	
+ 	valueTile("lights", "device.lights", inactiveLabel: false, decoration: "flat", width: 6, height: 2) {
+			state "default", label: 'Lights: ${currentValue}'
+        }
+        
     main "switch"
-    details (["switch","updateScene","sceneID","refresh"]) //"getSceneID","transitiontime","valueTT",
-
+    details (["switch", "lights", "updateScene", "sceneID", "refresh"]) 
+	}
 }
 
 def parse(description) {
@@ -96,70 +88,48 @@ def parse(description) {
 
 }
 
-/**
-void setTT(transitiontime) {
 
-	log.debug "Executing 'setTT' for ${device.label}: setting transition time to ${transitiontime}."
-//	parent.updateTransTime(this, transitiontime)
-	sendEvent(name: "transTime", value: transitiontime, isStateChange: true)
-
-}
-**/
 
 def on() {
     push()
 }
 
 def push () {
-	def groupID = 0
-//    def transitionTime = device.currentValue("transTime")
-//	if (transitionTime == null) {
-//    	transitionTime = 3
-//	}
-    parent.setToGroup(this, groupID) // , transitionTime
+	def theGroup = device.currentValue("group") ?: 0
+	parent.setToGroup(this, theGroup) 
     sendEvent(name: "momentary", value: "pushed", isStateChange: true)
 }
 
 def setToGroup ( Integer inGroupID ) {
-	def groupID = inGroupID ?: 0
-//    def transitionTime = device.currentValue("transTime") as Integer
-//	if (transitionTime == null) {
-//    	transitionTime = 3
-//	}
-    parent.setToGroup(this, groupID)  // , transitionTime
-    log.debug "Executing 'setToGroup' for ${device.label} using groupID ${groupID} and." // transition time of ${transitiontime}."
-//    sendEvent(name: "momentary", value: "pushed", isStateChange: true)
+
+	def theGroup = device.currentValue("group") ?: 0
+    parent.setToGroup(this, theGroup)  
+    log.debug "Executing 'setToGroup' for ${device.label} using groupID ${theGroup}."
+    
 }
 
-def updateScene() {
+def updateSceneFromDevice() {
 	log.trace "${this}: Update Scene Reached."
-//    def sceneIDfromP = parent.getId(this)
+
     def sceneIDfromD = device.currentValue("sceneID")
 
     log.debug "Retrieved sceneIDfromD: ${sceneIDfromD}."
-    String myScene = sceneIDfromD
+
+	String myScene = sceneIDfromD
 
     if (sceneIDfromD == null) {
     	def sceneIDfromP = parent.getID(this) - "s"
     	log.debug "Retrieved sceneIDfromP: ${sceneIDfromP}."
+        myScene = sceneIDfromP
     }
 
-
-//    parent.updateScene(this)
-//    parent.updateSceneUsingID(this, sceneIDfromP)
     parent.updateSceneUsingID(this, myScene)
-
-
-}
-
-def deleteScene() {
-	log.trace "${this}: Delete Scene Reached."
-	parent.deleteScene(this)
+	log.debug "Executing 'updateScene' for ${device.label} using sceneID ${myScene}."
 
 }
+
 
 def getSceneID() {
- //   log.debug "(this) means ${this} "
 
 	def sceneIDfromP = parent.getId(this) - "s"
     def realSceneID = sceneIDfromP - "s"
@@ -167,7 +137,7 @@ def getSceneID() {
 	log.debug "Real sceneID: ${realSceneID}."
 
     sendEvent(name: "sceneID", value: "${realSceneID}", isStateChange: true)
-    // sendEvent(name: "getSceneID", state: "State1", isStateChange: true)
+
 //	refresh()
 }
 
