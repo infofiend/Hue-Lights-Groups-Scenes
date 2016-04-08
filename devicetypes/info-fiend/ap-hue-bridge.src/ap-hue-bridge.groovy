@@ -1,6 +1,8 @@
 /**
  *  AP Hue Bridge
  *
+ *  Version 1.2 Added log 
+ *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  */
 
@@ -9,9 +11,12 @@ metadata {
 	// Automatically generated. Make future change here.
 	definition (name: "AP Hue Bridge", namespace: "info_fiend", author: "SmartThings") {
 		capability "Refresh"
+        
+        command "log", ["string","string"]
 
 		attribute "serialNumber", "string"
 		attribute "networkAddress", "string"
+        
 	}
 
 	simulator {
@@ -115,4 +120,30 @@ def poll() {
 def refresh() {
 	log.debug "Executing 'refresh'"
 	parent.manualRefresh()
+}
+
+def log(message, level = "trace") {
+	switch (level) {
+    	case "trace":
+        	log.trace "LOG FROM PARENT>" + message
+            break;
+
+    	case "debug":
+        	log.debug "LOG FROM PARENT>" + message
+            break
+
+    	case "warn":
+        	log.warn "LOG FROM PARENT>" + message
+            break
+
+    	case "error":
+        	log.error "LOG FROM PARENT>" + message
+            break
+
+        default:
+        	log.error "LOG FROM PARENT>" + message
+            break;
+    }
+
+    return null // always child interface call with a return value
 }
