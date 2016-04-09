@@ -137,21 +137,26 @@ def parse(description) {
 // handle commands
 void setTransitionTime(transitionTime) {
 	log.debug "Executing 'setTransitionTime': transition time is now ${transitionTime}."
+//    parent.setTransitionTime(this, transitionTime, "groups")
 	sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
 }
 
 void on() {
 	log.debug "Executing 'on'"
+    def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
+    def percent = device.currentValue("level") as Integer ?: 100
     
-	parent.on(this, "groups")
+	parent.on(this, percent, transitionTime, "groups")
 
-	sendEvent(name: "switch", value: "on", isStateChange: true)
+	sendEvent(name: "switch", value: "on")
+	sendEvent(name: "level", value: percent, isStateChange: true)  
 }
 
 void off() {
 	log.debug "Executing 'off"
+    def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
     
-	parent.off(this, "groups")
+	parent.off(this, transitionTime, "groups")
 	sendEvent(name: "switch", value: "off")
     sendEvent(name: "effect", value: "none", isStateChange: true)
 }
@@ -170,9 +175,11 @@ void nextLevel() {
 
 void setLevel(percent) { 	
 	log.debug "Executing 'setLevel'"
-       
+    def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
+    
 	if (verifyPercent(percent)) {
-	  parent.setLevel(this, percent, "groups")
+	  parent.setLevel(this, percent, transitionTime, "groups")
+      sendEvent(name: "switch", value: "on")
       sendEvent(name: "level", value: percent, isStateChange: true)  
     }  
 
@@ -180,9 +187,10 @@ void setLevel(percent) {
 
 void setSaturation(percent) {
 	log.debug "Executing 'setSaturation'"
-      
+    def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
+    
 	if (verifyPercent(percent)) {
-		parent.setSaturation(this, percent, "groups")
+		parent.setSaturation(this, percent, transitionTime, "groups")
 		sendEvent(name: "saturation", value: percent)
 		sendEvent(name: "colormode", value: "hs", isStateChange: true)
 	}
@@ -190,9 +198,10 @@ void setSaturation(percent) {
 
 void setHue(percent) {		
 	log.debug "Executing 'setHue'"
-   
+    def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
+    
 	if (verifyPercent(percent)) {
-		parent.setHue(this, percent, "groups")
+		parent.setHue(this, percent, transitionTime, "groups")
 		sendEvent(name: "hue", value: percent)
 		sendEvent(name: "colormode", value: "hs", isStateChange: true)
 	}
@@ -202,6 +211,7 @@ void setColor(value) {
     def events = []
     def validValues = [:]
 	def deviceLevel = device.currentValue("level") 
+    def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
     
 	if (verifyPercent(value.hue)) {
 		events << createEvent(name: "hue", value: value.hue)
@@ -242,7 +252,7 @@ void setColor(value) {
 
 	if (!events.isEmpty()) {
     	log.debug "setColor: ${this} to ${validValues},"
-		parent.setColor(this, validValues, "groups")
+		parent.setColor(this, validValues, transitionTime, "groups")
 	}
     events.each {
         sendEvent(it)
@@ -273,11 +283,12 @@ void setAdjustedColor(value) {
 }
 
 void setColorTemperature(value) {  	
+    def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
     
 	if (value) {
         log.trace "setColorTemperature: ${value}k"
 
-		parent.setColorTemperature(this, value, "groups")
+		parent.setColorTemperature(this, value, transitionTime, "groups")
 		sendEvent(name: "switch", value: "on", descriptionText: "Has been turned on")
 		sendEvent(name: "colorTemperature", value: value)
 		sendEvent(name: "colormode", value: "ct", isStateChange: true)
@@ -356,11 +367,15 @@ void initialize(hueID) {
 
 void alert(value) {
 	log.debug "Executing 'alert'"
-	parent.setAlert(this, value, "groups")
+    def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
+    
+	parent.setAlert(this, value, transitionTime, "groups")
 }
 
 void colorloopOn() {
     log.debug "Executing 'colorloopOn'"
+    def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
+    
     def dState = device.latestValue("switch") as String ?: "off"
 
     if (dState == "off") {
@@ -369,17 +384,19 @@ void colorloopOn() {
 	        level = 100 
         }
 		sendEvent(name: "level", value: percent)  
-		parent.on(this, 0, level, "groups")
+		parent.on(this, 0, level, transitionTime, "groups")
         sendEvent(name: "switch", value: "on")
 	}
     
-	parent.setEffect(this, "colorloop", "groups")
+	parent.setEffect(this, "colorloop", transitionTime, "groups")
     sendEvent(name: "effect", value: "colorloop", isStateChange: true)
 }
 
 void colorloopOff() {
     log.debug "Executing 'colorloopOff'"
-    parent.setEffect(this, "none", "groups")
+    def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
+    
+    parent.setEffect(this, "none", transitionTime, "groups")
     sendEvent(name: "effect", value: "none", isStateChange: true)
 }
 
