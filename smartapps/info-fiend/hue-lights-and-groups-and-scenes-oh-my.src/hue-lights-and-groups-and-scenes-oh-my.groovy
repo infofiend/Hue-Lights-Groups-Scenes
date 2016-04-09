@@ -2,8 +2,8 @@
  *  Hue Lights and Groups and Scenes (OH MY) - new Hue Service Manager
  *
  *  Version 1.4:  	Added ability to create / modify / delete Hue Hub Scenes directly from SmartApp
- *			Overhauled communications to / from Hue Hub
- *			Revised child app functions		
+ *					Overhauled communications to / from Hue Hub
+ *					Revised child app functions		
  *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  *
@@ -1131,7 +1131,7 @@ def parse(childDevice, description) {
 		def bodyString = new String(parsedEvent.body.decodeBase64())
 		childDevice?.log "parse() - ${bodyString}"
 		def body = new groovy.json.JsonSlurper().parseText(bodyString)
-		childDevice?.log "BODY - $body"
+//		childDevice?.log "BODY - $body"
         
 		if (body instanceof java.util.HashMap) {   // POLL RESPONSE
 		  
@@ -1275,9 +1275,9 @@ def parse(childDevice, description) {
                             case "lights":
 								sendEvent(childDeviceNetworkId, [name: "lights", value: v])
 								break
- //                           case "transitiontime":
- //                           	sendEvent(childDeviceNetworkId, [name: "transitiontime", value: v ?: getSelectedTransition()])
- //      	                        break    
+                            case "transitiontime":
+                                sendEvent(childDeviceNetworkId, [name: "transitiontime", value: v ]) // ?: getSelectedTransition()
+      	                        break    
 						}
 					}
 
@@ -1315,9 +1315,8 @@ def hubVerification(bodytext) {
         }
     }
 }
-
-def on( childDevice, deviceType ) {
-	childDevice?.log "HLGS:  Executing 'on'"
+def setTransitionTime ( childDevice, transitionTime, deviceType ) {
+	childDevice?.log "HLGS:  Executing 'setTransitionTime'"
     def api = "state" 
     def dType = "lights"
     def deviceID = getId(childDevice) 
@@ -1327,15 +1326,37 @@ def on( childDevice, deviceType ) {
         deviceID = deviceID - "g"
     }
 	def path = dType + "/" + deviceID + "/" + api
+    childDevice?.log "HLGS: 'transitionTime' path is $path"
+    
+	def value = [transitiontime: transitionTime * 10]
+
+	childDevice?.log "HLGS: sending ${value}."	
+	put( path, value )
+
+}
+
+def on( childDevice, percent, transitionTime, deviceType ) {
+	childDevice?.log "HLGS:  Executing 'on'"
+    def api = "state" 
+    def dType = "lights"
+    def deviceID = getId(childDevice) 
+    if(deviceType == "groups") { 
+    	api = "action"
+        dType = "groups" 
+        deviceID = deviceID - "g"
+    }
+  	def level = Math.min(Math.round(percent * 255 / 100), 255)
+    
+	def path = dType + "/" + deviceID + "/" + api
     childDevice?.log "HLGS: 'on' path is $path"
     
-	def value = [on: true]
+	def value = [on: true, bri: level, transitiontime: transitionTime * 10 ]
 
 	childDevice?.log "HLGS:  sending 'on' using ${value}."	
 	put( path, value )
 }
 
-def off( childDevice, deviceType ) {
+def off( childDevice, transitionTime, deviceType ) {
 	childDevice?.log "HLGS:  Executing 'off'"
     def api = "state" 
     def dType = "lights"
@@ -1347,13 +1368,13 @@ def off( childDevice, deviceType ) {
     }
 	def path = dType + "/" + deviceID + "/" + api
     childDevice?.log "HLGS:  'off' path is ${path}."	
-	def value = [on: false]
+	def value = [on: false, transitiontime: transitionTime * 10 ]
 	childDevice?.log "HLGS:  sending 'off' using ${value}."	
 
 	put( path, value )
 }
 
-def setLevel( childDevice, percent, deviceType ) {
+def setLevel( childDevice, percent, transitionTime, deviceType ) {
 	def api = "state" 
     def dType = "lights"
     def deviceID = getId(childDevice) 
@@ -1363,14 +1384,14 @@ def setLevel( childDevice, percent, deviceType ) {
         deviceID = deviceID - "g"
     }
   	def level = Math.min(Math.round(percent * 255 / 100), 255)
-	def value = [bri: level, on: percent > 0]		
+	def value = [bri: level, on: percent > 0, transitiontime: transitionTime * 10 ]		
    	def path = dType + "/" + deviceID + "/" + api
 	childDevice?.log "HLGS: 'on' path is $path"
    	childDevice?.log "HLGS:  Executing 'setLevel($percent).'"
 	put( path, value)
 }
 
-def setSaturation(childDevice, percent, deviceType) {
+def setSaturation(childDevice, percent, transitionTime, deviceType) {
 	def api = "state" 
     def dType = "lights"
     def deviceID = getId(childDevice) 
@@ -1385,10 +1406,10 @@ def setSaturation(childDevice, percent, deviceType) {
 	def level = Math.min(Math.round(percent * 255 / 100), 255)
     
    	childDevice?.log "HLGS:  Executing 'setSaturation($percent).'"
-	put( path, [sat: level])
+	put( path, [sat: level, transitiontime: transitionTime * 10 ])
 }
 
-def setHue(childDevice, percent, deviceType ) {
+def setHue(childDevice, percent, transitionTime, deviceType ) {
 	def api = "state" 
     def dType = "lights"
     def deviceID = getId(childDevice) 
@@ -1402,10 +1423,10 @@ def setHue(childDevice, percent, deviceType ) {
 
 	childDevice?.log "HLGS: Executing 'setHue($percent)'"
 	def level =	Math.min(Math.round(percent * 65535 / 100), 65535)
-	put( path, [hue: level])
+	put( path, [hue: level, transitiontime: transitionTime * 10 ])
 }
 
-def setColorTemperature(childDevice, huesettings, deviceType ) {
+def setColorTemperature(childDevice, huesettings, transitionTime, deviceType ) {
 	def api = "state" 
     def dType = "lights" 
     def deviceID = getId(childDevice) 
@@ -1418,12 +1439,12 @@ def setColorTemperature(childDevice, huesettings, deviceType ) {
   	def path = dType + "/" + deviceID + "/" + api
     
 	childDevice?.log "HLGS: Executing 'setColorTemperature($huesettings)'"
-	def value = [ct: kelvinToMireks(huesettings)]
+	def value = [on: true, ct: kelvinToMireks(huesettings), transitiontime: transitionTime * 10 ]
     
 	put( path, value )
 }
 
-def setColor(childDevice, huesettings, deviceType ) {
+def setColor(childDevice, huesettings, transitionTime, deviceType ) {
 	def api = "state" 
     def dType = "lights"
     def deviceID = getId(childDevice) 
@@ -1453,7 +1474,7 @@ def setColor(childDevice, huesettings, deviceType ) {
     } else if (huesettings.switch == "off") { 
     	value.on = false
     }
-    
+    value.transitiontime = transitionTime * 10 
     value.bri = Math.min(Math.round(huesettings.level * 255 / 100), 255) 	
 	value.alert = huesettings.alert ? huesettings.alert : "none"
 
