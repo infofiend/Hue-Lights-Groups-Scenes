@@ -128,11 +128,17 @@ def parse(description) {
 
 // handle commands
 void setTransitionTime(transitionTime) {
-	log.debug "Executing 'setTransitionTime': transition time is now ${transitionTime}."
-//	parent.setTransitionTime(this, transitionTime, "lights")
-    sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
+
+	def maxTransitionTime = transitionTime
+    if (transitionTime > 10) {
+    	maxTransitionTime = 10
+    }
     
+	log.debug "Executing 'setTransitionTime': transition time is now ${transitionTime}."
+
+	sendEvent(name: "transitionTime", value: maxTransitionTime, isStateChange: true)
 }
+
 
 void on() {
 	log.debug "Executing 'on'"
@@ -367,19 +373,19 @@ void colorloopOn() {
     def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
     
     def dState = device.latestValue("switch") as String ?: "off"
-
-    if (dState == "off") {
-        def level = device.currentValue("level")
-	    if( level == null || level == 0) { 
-	        level = 100 
-			sendEvent(name: "level", value: percent)  
-        }
-		parent.on(this, 0, level, transitionTime, "lights")
+	def percent = device.currentValue("level") ?: 100
+    if (percent == 0) { percent = 100}
+    if (dState == "off") {		
+    
+		sendEvent(name: "level", value: percent)  
+		parent.on(this, percent, transitionTime, "lights")
         sendEvent(name: "switch", value: "on")
 	}
     
 	parent.setEffect(this, "colorloop", transitionTime, "lights")
     sendEvent(name: "effect", value: "colorloop", isStateChange: true)
+    
+    parent.poll()
 }
 
 void colorloopOff() {
