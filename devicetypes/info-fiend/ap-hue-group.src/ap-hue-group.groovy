@@ -136,9 +136,15 @@ def parse(description) {
 
 // handle commands
 void setTransitionTime(transitionTime) {
+
+	def maxTransitionTime = transitionTime
+    if (transitionTime > 10) {
+    	maxTransitionTime = 10
+    }
+    
 	log.debug "Executing 'setTransitionTime': transition time is now ${transitionTime}."
-//    parent.setTransitionTime(this, transitionTime, "groups")
-	sendEvent(name: "transitionTime", value: transitionTime, isStateChange: true)
+
+	sendEvent(name: "transitionTime", value: maxTransitionTime, isStateChange: true)
 }
 
 void on() {
@@ -150,6 +156,7 @@ void on() {
 
 	sendEvent(name: "switch", value: "on")
 	sendEvent(name: "level", value: percent, isStateChange: true)  
+    parent.poll()
 }
 
 void off() {
@@ -159,6 +166,7 @@ void off() {
 	parent.off(this, transitionTime, "groups")
 	sendEvent(name: "switch", value: "off")
     sendEvent(name: "effect", value: "none", isStateChange: true)
+    parent.poll()
 }
 
 void nextLevel() {
@@ -182,7 +190,7 @@ void setLevel(percent) {
       sendEvent(name: "switch", value: "on")
       sendEvent(name: "level", value: percent, isStateChange: true)  
     }  
-
+	parent.poll()
 }
 
 void setSaturation(percent) {
@@ -194,6 +202,7 @@ void setSaturation(percent) {
 		sendEvent(name: "saturation", value: percent)
 		sendEvent(name: "colormode", value: "hs", isStateChange: true)
 	}
+    parent.poll()
 }
 
 void setHue(percent) {		
@@ -205,6 +214,7 @@ void setHue(percent) {
 		sendEvent(name: "hue", value: percent)
 		sendEvent(name: "colormode", value: "hs", isStateChange: true)
 	}
+    parent.poll()
 }
 
 void setColor(value) {
@@ -257,6 +267,7 @@ void setColor(value) {
     events.each {
         sendEvent(it)
     }
+    parent.poll()
 }
 
 void reset() {
@@ -295,7 +306,7 @@ void setColorTemperature(value) {
 	} else {
 		log.warn "Invalid color temperature"
 	}
-    
+    parent.poll()
 }
 
 void refresh() {
@@ -370,6 +381,7 @@ void alert(value) {
     def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
     
 	parent.setAlert(this, value, transitionTime, "groups")
+    parent.poll()
 }
 
 void colorloopOn() {
@@ -377,19 +389,21 @@ void colorloopOn() {
     def transitionTime = device.currentValue("transitionTime") as Integer ?: 0
     
     def dState = device.latestValue("switch") as String ?: "off"
-
+	def percent = device.currentValue("level") ?: 100
+    
     if (dState == "off") {
-        def level = device.currentValue("level")
-	    if( level == null || level == 0) { 
-	        level = 100 
-        }
+		
+        if (percent == 0) { percent = 100}
+        
 		sendEvent(name: "level", value: percent)  
-		parent.on(this, 0, level, transitionTime, "groups")
+		parent.on(this, percent, transitionTime, "groups")
         sendEvent(name: "switch", value: "on")
 	}
     
 	parent.setEffect(this, "colorloop", transitionTime, "groups")
     sendEvent(name: "effect", value: "colorloop", isStateChange: true)
+    
+    parent.poll()
 }
 
 void colorloopOff() {
@@ -398,6 +412,8 @@ void colorloopOff() {
     
     parent.setEffect(this, "none", transitionTime, "groups")
     sendEvent(name: "effect", value: "none", isStateChange: true)
+    
+    parent.poll()
 }
 
 void bri_inc(value) {
