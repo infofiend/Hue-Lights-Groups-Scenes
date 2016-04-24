@@ -2,6 +2,7 @@
  *  Hue Lights and Groups and Scenes (OH MY) - new Hue Service Manager
  *
  *  Version 1.4:  	Added ability to create / modify / delete Hue Hub Scenes directly from SmartApp
+ *					Added ability to create / modify / delete Hue Hub Groups directly from SmartApp
  *					Overhauled communications to / from Hue Hub
  *					Revised child app functions		
  *
@@ -29,8 +30,12 @@ preferences {
 	page(name:"sceneDiscovery", title:"Scene Discovery", content:"sceneDiscovery", refreshTimeout:5)
     page(name:"defaultTransition", title:"Default Transition", content:"defaultTransition", refreshTimeout:5)
     page(name:"createScene", title:"Create A New Scene", content:"createScene")
-    page(name:"modifyScene", title:"Modify An Existing Scenes", content:"modifyScene")
-	page(name:"removeScene", title:"Delete An Existing Scenes", content:"removeScene")
+    page(name:"changeSceneName", title:"Change Name Of An Existing Scene", content:"changeSceneName")
+    page(name:"modifyScene", title:"Modify An Existing Scene", content:"modifyScene")
+	page(name:"removeScene", title:"Delete An Existing Scene", content:"removeScene")
+    page(name:"createGroup", title:"Create A New Group", content:"createGroup")
+    page(name:"modifyGroup", title:"Modify An Existing Group", content:"modifyGroup")
+	page(name:"removeGroup", title:"Delete An Existing Group", content:"removeGroup")
 }
 
 def mainPage() {
@@ -142,10 +147,20 @@ def groupDiscovery() {
     
 	int groupRefreshCount = !state.groupRefreshCount ? 0 : state.groupRefreshCount as int
 	state.groupRefreshCount = groupRefreshCount + 1
-	def refreshInterval = 3
+	
+    def refreshInterval = 3
+    if (state.gChange) { 
+    	refreshInterval = 1
+        state.gChange = false
+    }
 
-	def optionsGroups = groupsDiscovered() ?: []
-	def numFoundGroups = optionsGroups.size() ?: 0
+	def optionsGroups = []
+	def numFoundGroups = []
+    optionsGroups = groupsDiscovered() ?: []
+    numFoundGroups = optionsGroups.size() ?: 0
+    
+//    if (numFoundGroups == 0)
+//        app.updateSetting("selectedGroups", "")
 
 	if((groupRefreshCount % 3) == 0) {
 	    log.debug "START GROUP DISCOVERY"
@@ -153,7 +168,7 @@ def groupDiscovery() {
         log.debug "END GROUP DISCOVERY"
 	}
 
-	return dynamicPage(name:"groupDiscovery", title:"Group Discovery Started!", nextPage:"sceneDiscovery", refreshInterval:refreshInterval, uninstall: true) {
+	return dynamicPage(name:"groupDiscovery", title:"Group Discovery Started!", nextPage:"sceneDiscovery", refreshInterval:refreshInterval, install: false, uninstall: isInitComplete) {
 		section("Please wait while we discover your Hue Groups. Discovery can take a few minutes, so sit back and relax! Select your device below once discovered.") {
 			input "selectedGroups", "enum", required:false, title:"Select Hue Groups (${numFoundGroups} found)", multiple:true, options:optionsGroups
 
@@ -163,54 +178,317 @@ def groupDiscovery() {
 			href "bridgeDiscovery", title: title, description: "", state: selectedHue ? "complete" : "incomplete", params: [override: true]
 
 		}
+        if (state.initialized) {
+        
+			section {
+				href "createGroup", title: "Create a Group", description: "Create A New Group On Hue Hub", state: selectedHue ? "complete" : "incomplete" 
+
+	    	}
+			section {
+				href "modifyGroup", title: "Modify a Group", description: "Modify The Lights Contained In Existing Group On Hue Hub", state: selectedHue ? "complete" : "incomplete" 
+
+	    	}
+			section {
+				href "removeGroup", title: "Delete a Group", description: "Delete An Existing Group From Hue Hub", state: selectedHue ? "complete" : "incomplete" 
+	    	}
+
+		}             
 	}
 }
 
+
+def createGroup(params=[:]) { 
+    
+	def theBulbs = state.bulbs
+    def creBulbsNames = []
+    def bulbID 
+    def theBulbName     
+   	theBulbs?.each {
+       	bulbID = it.key
+        theBulbName = state.bulbs[bulbID].name as String
+	    creBulbsNames << [name: theBulbName, id:bulbID]        
+    }		    
+    
+    state.creBulbNames = creBulbsNames
+    log.trace "creBulbsNames = ${creBulbsNames}."
+
+	def creTheLightsID = []
+    if (creTheLights) {
+			       	
+		creTheLights.each { v ->
+       		creBulbsNames.each { m ->
+            	if (m.name == v) {
+                	creTheLightsID << m.id 
+        		}
+            }
+        }
+	}
+    
+	if (creTheLightsID) {log.debug "The Selected Lights ${creTheLights} have ids of ${creTheLightsID}."}
+        
+    if (creTheLightsID && creGroupName) {
+
+       	def body = [name: creGroupName, lights: creTheLightsID]
+
+		log.debug "***************The body for createNewGroup() will be ${body}."
+
+    	if ( creGroupConfirmed == "Yes" ) { 
+        	
+            // create new group on Hue Hub
+	        createNewGroup(body)
+            
+            // reset page
+			app.updateSetting("creGroupConfirmed", null)
+			app.updateSetting("creGroupName", null)
+			app.updateSetting("creTheLights", null)
+            app.updateSetting("creTheLightsID", null)
+			app.updateSetting("creGroup", null)
+
+            
+            state.gChange = true
+             
+        }
+    }
+        	
+          
+
+		return dynamicPage(name:"createGroup", title:"Create Group", nextPage:"groupDiscovery", refreshInterval:3, install:false, uninstall: false) {
+			section("Choose Name for New Group") {
+				input "creGroupName", "text", title: "Group Name: (hit enter when done)", required: true, submitOnChange: true
+        
+       			if (creGroupName) {
+	        	
+					input "creTheLights", "enum", title: "Choose The Lights You Want In This Scene", required: true, multiple: true, submitOnChange: true, options:creBulbsNames.name.sort() 
+				
+                	if (creTheLights) {
+                		
+	                    paragraph "ATTENTION: Clicking Yes below will IMMEDIATELY create a new group on the Hue Hub called ${creGroupName} using the selected lights." 
+                
+                		input "creGroupConfirmed", "enum", title: "Are you sure?", required: true, options: ["Yes", "No"], defaultValue: "No", submitOnChange: true
+			            
+                	} 
+                }
+			}
+    	}
+}
+
+def modifyGroup(params=[:]) { 
+     
+    
+   	def theGroups = []
+    theGroups = state.groups 								// scenesDiscovered() ?: [] 
+   
+ 	def modGroupOptions = []        
+    def grID
+    def theGroupName
+	theGroups?.each {
+       	grID = it.key
+        theGroupName = state.groups[grID].name as String
+	    modGroupOptions << [name:theGroupName, id:grID]
+   	}
+    
+    state.modGroupOptions = modGroupOptions
+	log.trace "modGroupOptions = ${modGroupOptions}."
+
+	def modGroupID
+	if (modGroup) {
+ 		state.modGroupOptions.each { m ->
+    	    if (modGroup == m.name) {
+   	    		modGroupID = m.id
+				log.debug "The selected group ${modGroup} has an id of ${modGroupID}."        
+   			}
+	    }		                
+	}	
+
+	def theBulbs = state.bulbs
+    def modBulbsNames = []
+    def bulbID 
+    def theBulbName     
+   	theBulbs?.each {
+       	bulbID = it.key
+        theBulbName = state.bulbs[bulbID].name as String
+	    modBulbsNames << [name: theBulbName, id:bulbID]        
+    }		    
+    
+    state.modBulbNames = modBulbsNames
+    log.trace "modBulbsNames = ${modBulbsNames}."
+
+	def modTheLightsID = []
+    if (modTheLights) {
+			       	
+		modTheLights.each { v ->
+       		modBulbsNames.each { m ->
+//            	log.debug "m.name is ${m.name} and v is ${v}."
+            	if (m.name == v) {
+//                	log.debug "m.id is ${m.id}."
+                	modTheLightsID << m.id // myBulbs.find{it.name == v}
+        		}
+            }
+        }
+	}
+    
+	if (modTheLightsID) {log.debug "The Selected Lights ${modTheLights} have ids of ${modTheLightsID}."}
+        
+    if (modTheLightsID && modGroupID) {
+
+       	def body = [groupID: modGroupID]
+        if (modGroupName) {body.name = modGroupName}
+        if (modTheLightsID) {body.lights = modTheLightsID}
+
+		log.debug "***************The body for updateGroup() will be ${body}."
+
+    	if ( modGroupConfirmed == "Yes" ) {
+			
+            // modify Group lights (and optionally name) on Hue Hub
+	        updateGroup(body)
+            
+            // modify Group lights within ST
+            def dni = app.id + "/" + modGroupID + "g"            
+	        if (modTheLightsID) { sendEvent(dni, [name: "lights", value: modTheLights]) }
+            
+            // reset page
+            app.updateSetting("modGroupConfirmed", null)
+			app.updateSetting("modGroupName", "")
+			app.updateSetting("modTheLights", null)
+			app.updateSetting("modTheLightsID", null)            
+			app.updateSetting("modGroup", null)           
+            app.updateSetting("modGroupID", null) 
+            
+            state.gChange = true 
+        }
+    }
+        	
+          
+
+		return dynamicPage(name:"modifyGroup", title:"Modify Group", nextPage:"groupDiscovery", refreshInterval:3, install:false, uninstall: false) {
+			section("Choose Group to Modify") {
+				input "modGroup", "enum", title: "Modify Group:", required: true, multiple: false, submitOnChange: true, options:modGroupOptions.name.sort() {it.value}
+        
+       			if (modGroup) {
+	        	
+					input "modTheLights", "enum", title: "Choose The Lights You Want In This Group (reflected in Hue Hub and within ST device)", required: true, multiple: true, submitOnChange: true, options:modBulbsNames.name.sort() 
+				
+                	if (modTheLights) {
+                		input "modGroupName", "text", title: "Change Group Name (Reflected ONLY within Hue Hub - ST only allows name / label change via mobile app or IDE ). ", required: false, submitOnChange: true
+
+	                    paragraph "ATTENTION: Clicking Yes below will IMMEDIATELY set the ${modGroup} group to the selected lights." 
+                
+                		input "modGroupConfirmed", "enum", title: "Are you sure?", required: true, options: ["Yes", "No"], defaultValue: "No", submitOnChange: true
+			            
+                	} 
+                }
+			}
+    	}
+}
+
+
+
+
+def removeGroup(params=[:]) {     
+    
+   	def theGroups = []
+    theGroups = state.groups
+   
+ 	def remGroupOptions = []        
+    def grID
+    def theGroupName
+	theGroups?.each {
+       	grID = it.key
+        theGroupName = state.groups[grID].name as String
+	    remGroupOptions << [name:theGroupName, id:grID]
+   	}
+    
+    state.remGroupOptions = remGroupOptions
+	log.trace "remGroupOptions = ${remGroupOptions}."
+
+	def remGroupID
+	if (remGroup) {
+ 		state.remGroupOptions.each { m ->
+    	    if (remGroup == m.name) {
+   	    		remGroupID = m.id
+				log.debug "The selected group ${remGroup} has an id of ${remGroupID}."        
+   			}
+	    }		                
+	}	
+        
+    if (remGroupID) {
+
+       	def body = [groupID: remGroupID]
+
+		log.debug "***************The body for deleteGroup() will be ${body}."
+
+    	if ( remGroupConfirmed == "Yes" ) { 
+        	                  
+			// delete group from hub                              
+	        deleteGroup(body)             
+            
+            // try deleting group from ST (if exists)            
+            def dni = app.id + "/" + remGroupID + "g"
+            log.debug "remGroup: dni = ${dni}."
+            try {
+            	deleteChildDevice(dni)
+                log.trace "${remGroup} found and successfully deleted from ST."
+			} catch (e) {
+                log.debug "${remGroup} not found within ST - no action taken."            	
+			}
+            
+            // reset page
+            app.updateSetting("remGroupConfirmed", null)
+			app.updateSetting("remGroup", null)
+            app.updateSetting("remGroupID", null)
+            
+            state.gChange = true
+        }
+    }
+        	
+          
+
+		return dynamicPage(name:"removeGroup", title:"Delete Group", nextPage:"groupDiscovery", refreshInterval:3, install:false, uninstall: false) {
+			section("Choose Group to DELETE") {
+				input "remGroup", "enum", title: "Delete Group:", required: true, multiple: false, submitOnChange: true, options:remGroupOptions.name.sort() {it.value}
+        
+       			if (remGroup) {
+	        	
+	                paragraph "ATTENTION: Clicking Yes below will IMMEDIATELY DELETE the ${remGroup} group FOREVER!!!" 
+                
+                	input "remGroupConfirmed", "enum", title: "Are you sure?", required: true, options: ["Yes", "No"], defaultValue: "No", submitOnChange: true
+			            
+				} 
+                
+			}
+    	}
+}
+
+
+
+
 def sceneDiscovery() {
-
-		settings.confirmMod = null
-        settings.newSceneName = ""
-        settings.theLights = []
-        settings.modScene = null
-        state.updateScene == null
-
-
 
 	def isInitComplete = initComplete() == "complete"
 	
     state.inItemDiscovery = true
 
-	def bridge = null
     if (selectedHue) {
-        bridge = getChildDevice(selectedHue)
+        def bridge = getChildDevice(selectedHue)
         subscribe(bridge, "sceneList", sceneListHandler)
     }
-    state.bridgeRefreshCount = 0
 
     def toDo = ""
-    if (sceneLights) {
-	    log.debug "newSceneLights ${newSceneLights}." 
-    	postScene( newSceneName, newSceneLights )
-        newSceneName = null
-        newSceneLights = null        
-	}
-    
-    if (isInitComplete) {
-
-//		def optSceneBulbs = settings.selectedBulbs
-//		def numFoundBulbs = optSceneBulbs.size() ?: 0        
-//        log.debug "Bulbs for new scene are ${optSceneBulbs}." 
-        def InitComplete = true
-    }
-    
+     
 	int sceneRefreshCount = !state.sceneRefreshCount ? 0 : state.sceneRefreshCount as int
 	state.sceneRefreshCount = sceneRefreshCount + 1
-	def refreshInterval = 3
+	
+    def refreshInterval = 3
+    if (state.sChange) {
+    	refreshInterval = 1
+        state.sChange = false
+    }    
 
 	def optionsScenes = scenesDiscovered() ?: []
 	def numFoundScenes = optionsScenes.size() ?: 0
-	if (numFoundScenes == 0)
-        app.updateSetting("selectedScenes", "")
+
+//	if (numFoundScenes == 0)
+//        app.updateSetting("selectedScenes", "")
 	
 	if((sceneRefreshCount % 3) == 0) {
         log.debug "START HUE SCENE DISCOVERY"
@@ -218,7 +496,7 @@ def sceneDiscovery() {
         log.debug "END HUE SCENE DISCOVERY"
 	}
 
-	return dynamicPage(name:"sceneDiscovery", title:"Scene Discovery Started!", nextPage:toDo, refreshInterval:refreshInterval, install: true, uninstall: InitComplete) {
+	return dynamicPage(name:"sceneDiscovery", title:"Scene Discovery Started!", nextPage:toDo, refreshInterval:refreshInterval, install: true, uninstall: isInitComplete) {
 		section("Please wait while we discover your Hue Scenes. Discovery can take a few minutes, so sit back and relax! Select your device below once discovered.") {
 			input "selectedScenes", "enum", required:false, title:"Select Hue Scenes (${numFoundScenes} found)", multiple:true, options:optionsScenes.sort {it.value}
 		}
@@ -230,15 +508,19 @@ def sceneDiscovery() {
 		if (state.initialized) {
         
 			section {
-				href "createScene", title: "Create a Scene", description: "Create A New Scene", state: selectedHue ? "complete" : "incomplete" 
+				href "createScene", title: "Create a Scene", description: "Create A New Scene On Hue Hub", state: selectedHue ? "complete" : "incomplete" 
 
 	    	}
 			section {
-				href "modifyScene", title: "Modify a Scene", description: "Modify Existing Scene", state: selectedHue ? "complete" : "incomplete" 
+				href "changeSceneName", title: "Change the Name of a Scene", description: "Change Scene Name On Hue Hub", state: selectedHue ? "complete" : "incomplete" 
+
+	    	}
+            section {
+				href "modifyScene", title: "Modify a Scene", description: "Modify The Lights And / Or The Light Settings For An Existing Scene On Hue Hub", state: selectedHue ? "complete" : "incomplete" 
 
 	    	}
 			section {
-				href "removeScene", title: "Delete a Scene", description: "Delete An Existing Scene", state: selectedHue ? "complete" : "incomplete" 
+				href "removeScene", title: "Delete a Scene", description: "Delete An Existing Scene From Hue Hub", state: selectedHue ? "complete" : "incomplete" 
 	    	}
 
 		}              
@@ -265,9 +547,7 @@ def createScene(params=[:]) {
 			       	
 		creTheLights.each { v ->
        		creBulbsNames.each { m ->
-//            	log.debug "m.name is ${m.name} and v is ${v}."
             	if (m.name == v) {
-//                	log.debug "m.id is ${m.id}."
                 	creTheLightsID << m.id // myBulbs.find{it.name == v}
         		}
             }
@@ -283,22 +563,26 @@ def createScene(params=[:]) {
 		log.debug "***************The body for createNewScene() will be ${body}."
 
     	if ( creSceneConfirmed == "Yes" ) { 
-        	                  
+        	 
+            // create new scene on Hue Hub 
 	        createNewScene(body)
-			settings.creSceneConfirmed = null
-			settings.creSceneName = ""
-			settings.creTheLights = []
-			settings.creScene = null
             
-             
+            // refresh page
+			app.updateSetting("creSceneConfirmed", null)
+			app.updateSetting("creSceneName", "")
+			app.updateSetting("creTheLights", null)
+            app.updateSetting("creTheLightsID", null)
+			app.updateSetting("creScene", null)
+            
+            state.sChange = true 
         }
     }
         	
           
 
-		return dynamicPage(name:"createScene", title:"Create Scene", nextPage:"sceneDiscovery", refreshInterval:5, install:false, uninstall: false) {
+		return dynamicPage(name:"createScene", title:"Create Scene", nextPage:"sceneDiscovery", refreshInterval:3, install:false, uninstall: false) {
 			section("Choose Name for New Scene") {
-				input "creSceneName", "text", title: "Scene Name:", required: true, submitOnChange: true
+				input "creSceneName", "text", title: "New Scene Name:", required: true, submitOnChange: true
         
        			if (creSceneName) {
 	        	
@@ -316,8 +600,9 @@ def createScene(params=[:]) {
     	}
 }
 
-def modifyScene(params=[:]) { 
-    
+
+
+def modifyScene(params=[:]) {     
     
    	def theScenes = []
     theScenes = state.scenes 								// scenesDiscovered() ?: [] 
@@ -362,10 +647,8 @@ def modifyScene(params=[:]) {
 			       	
 		modTheLights.each { v ->
        		modBulbsNames.each { m ->
-//            	log.debug "m.name is ${m.name} and v is ${v}."
             	if (m.name == v) {
-//                	log.debug "m.id is ${m.id}."
-                	modTheLightsID << m.id // myBulbs.find{it.name == v}
+                	modTheLightsID << m.id 
         		}
             }
         }
@@ -381,30 +664,41 @@ def modifyScene(params=[:]) {
 
 		log.debug "***************The body for updateScene() will be ${body}."
 
-    	if ( modSceneConfirmed == "Yes" ) { //&& state.updateScene != "Sent" ) {
+    	if ( modSceneConfirmed == "Yes" ) { 
         	                  
-	        updateScene(body)
-			settings.modSceneConfirmed = null
-			settings.modSceneName = ""
-			settings.modTheLights = []
-			settings.modScene = null
+	        // update Scene lights and settings on Hue Hub
+            updateScene(body)
             
-             
+            // update Scene lights on ST device
+			def dni = app.id + "/" + modSceneID + "s"            
+	        if (modTheLightsID) { sendEvent(dni, [name: "lights", value: modTheLightsID]) }
+            
+            // reset page
+            
+            app.updateSetting("modSceneConfirmed", null)
+			app.updateSetting("modSceneName", "")
+			app.updateSetting("modTheLights", null)           
+            app.updateSetting("modScene", null)    
+            // pause(300)
+            // app.updateSetting("modSceneID", null)    
+			// app.updateSetting("modTheLightsID", null)           
+            
+            state.sChange = true
         }
     }
         	
           
 
-		return dynamicPage(name:"modifyScene", title:"Modify Scene", nextPage:"sceneDiscovery", refreshInterval:5, install:false, uninstall: false) {
+		return dynamicPage(name:"modifyScene", title:"Modify Scene", nextPage:"sceneDiscovery", refreshInterval:3, install:false, uninstall: false) {
 			section("Choose Scene to Modify") {
 				input "modScene", "enum", title: "Modify Scene:", required: true, multiple: false, submitOnChange: true, options:modSceneOptions.name.sort() {it.value}
         
        			if (modScene) {
 	        	
-					input "modTheLights", "enum", title: "Choose The Lights You Want In This Scene", required: true, multiple: true, submitOnChange: true, options:modBulbsNames.name.sort() 
+					input "modTheLights", "enum", title: "Choose The Lights You Want In This Scene (reflected within Hue Hub and on ST Scene device", required: true, multiple: true, submitOnChange: true, options:modBulbsNames.name.sort() 
 				
                 	if (modTheLights) {
-                		input "modSceneName", "text", title: "Change Scene Name (OPTIONAL)", required: false, submitOnChange: true
+                		input "modSceneName", "text", title: "Change Scene Name (Reflected ONLY within Hue Hub - ST only allows name / label change via mobile app or IDE ).", required: false, submitOnChange: true
 
 	                    paragraph "ATTENTION: Clicking Yes below will IMMEDIATELY set the ${modScene} scene to selected lights' current configuration." 
                 
@@ -415,6 +709,79 @@ def modifyScene(params=[:]) {
 			}
     	}
 }
+
+def changeSceneName(params=[:]) { 
+    
+    
+   	def theScenes = []
+    theScenes = state.scenes 				 
+   
+ 	def renameSceneOptions = []        
+    def scID
+    def theSceneName
+	theScenes?.each {
+       	scID = it.key
+        theSceneName = state.scenes[scID].name as String
+	    renameSceneOptions << [name:theSceneName, id:scID]
+   	}
+    
+    state.renameSceneOptions = renameSceneOptions
+	log.trace "renameSceneOptions = ${renameSceneOptions}."
+
+	def renameSceneID
+	if (oldSceneName) {
+ 		state.renameSceneOptions.each { m ->
+    	    if (oldSceneName == m.name) {
+   	    		renameSceneID = m.id
+				log.debug "The selected scene ${oldSceneName} has an id of ${renameSceneID}."        
+   			}
+	    }		                
+	}	
+        
+    if (renameSceneID && newSceneName) {
+
+       	def body = [sceneID: renameSceneID, name: newSceneName]
+
+		log.debug "***************The body for renameScene() will be ${body}."
+
+    	if ( renameSceneConfirmed == "Yes" ) { 
+        	
+            // rename scene on Hue Hub 
+	        renameScene(body)
+
+			// refresh page           
+            app.updateSetting("renameSceneConfirmed", null)
+			app.updateSetting("newSceneName", "")  
+            app.updateSetting("oldSceneName", null)  
+            app.updateSetting("renameSceneID", null)  
+            
+            state.sChange = true  
+        }
+    }
+        	
+          
+
+		return dynamicPage(name:"changeSceneName", title:"Change Scene Name", nextPage:"sceneDiscovery", refreshInterval:3, install:false, uninstall: false) {
+			section("Change NAME of which Scene ") {
+				input "oldSceneName", "enum", title: "Change Scene:", required: true, multiple: false, submitOnChange: true, options:renameSceneOptions.name.sort() {it.value}
+        
+       			if (oldSceneName) {
+                
+                	input "newSceneName", "text", title: "Change Scene Name to (click enter when done): ", required: false, submitOnChange: true
+	        	
+	                paragraph "ATTENTION: Clicking Yes below will IMMEDIATELY CHANGE the name of ${oldSceneName} to ${newSceneName}!!!" 
+                
+                	input "renameSceneConfirmed", "enum", title: "Are you sure?", required: true, options: ["Yes", "No"], defaultValue: "No", submitOnChange: true
+			            
+				} 
+                
+			}
+    	}
+}
+
+
+
+
 
 def removeScene(params=[:]) { 
     
@@ -450,23 +817,37 @@ def removeScene(params=[:]) {
 
 		log.debug "***************The body for deleteScene() will be ${body}."
 
-    	if ( remSceneConfirmed == "Yes" ) { //&& state.updateScene != "Sent" ) {
-        	                  
+    	if ( remSceneConfirmed == "Yes" ) { 
+        	
+            // delete scene on Hue Buh
 	        deleteScene(body)
-			settings.remSceneConfirmed = "No"
-			settings.remScene = null
+			log.trace "${remScene} found and deleted from Hue Hub."
             
-             
+            // try deleting child scene from ST
+            def dni = app.id + "/" + renameSceneID + "s"
+            try {
+            	deleteChildDevice(dni)
+                log.trace "${remScene} found and successfully deleted from ST."
+			} catch (e) {
+                log.debug "${remScene} not found within ST - no action taken."            	
+			}
+            
+			// refresh page 
+            app.updateSetting("remSceneConfirmed", null)
+			app.updateSetting("remScene", null)            
+			app.updateSetting("remSceneID", null)            
+            
+            state.sChange = true  
         }
     }
         	
           
 
-		return dynamicPage(name:"removeScene", title:"Delete Scene", nextPage:"sceneDiscovery", refreshInterval:5, install:false, uninstall: false) {
+		return dynamicPage(name:"removeScene", title:"Delete Scene", nextPage:"sceneDiscovery", refreshInterval:3, install:false, uninstall: false) {
 			section("Choose Scene to DELETE") {
 				input "remScene", "enum", title: "Delete Scene:", required: true, multiple: false, submitOnChange: true, options:remSceneOptions.name.sort() {it.value}
         
-       			if (modScene) {
+       			if (remScene) {
 	        	
 	                paragraph "ATTENTION: Clicking Yes below will IMMEDIATELY DELETE the ${remScene} scene FOREVER!!!" 
                 
@@ -478,35 +859,6 @@ def removeScene(params=[:]) {
     	}
 }
 
-
-/**
-def askForScenes() {
-
-	def sceneList = []
-    state.scenes.each { k,v ->
-		log.trace "askForScenes$k: $v"
-			sceneList = [id: k, name: v.name]
-		
-//    	sceneList.id << getIdNOLOG(it) 
-//        sceneList.name << it.displayName
-	}
-    
-    log.debug "askForScenes: sceneList is ${sceneList}."
-    
-    return sceneList
-
-}
-
-def askForBulbs() {
-
-	def bulbList = []
-        bulbList = selectedBulbs
-    
-    return bulbList
-
-}
-
-**/
 
 
 def initComplete(){
@@ -553,6 +905,7 @@ private sendDeveloperReq() {
 
 private discoverHueBulbs() {
 	log.trace "discoverHueBulbs REACHED"
+    def host = getBridgeIP()
 	sendHubCommand(new physicalgraph.device.HubAction([
 		method: "GET",
 		path: "/api/${state.username}/lights",
@@ -563,22 +916,24 @@ private discoverHueBulbs() {
 
 private discoverHueGroups() {
 	log.trace "discoverHueGroups REACHED"
+    def host = getBridgeIP()
 	sendHubCommand(new physicalgraph.device.HubAction([
 		method: "GET",
 		path: "/api/${state.username}/groups",
 		headers: [
 			HOST: bridgeHostnameAndPort
-		]], bridgeDni))
+		]], "${selectedHue}"))
 }
 
 private discoverHueScenes() {
 	log.trace "discoverHueScenes REACHED"
+    def host = getBridgeIP()
     sendHubCommand(new physicalgraph.device.HubAction([
 		method: "GET",
 		path: "/api/${state.username}/scenes",
 		headers: [
 			HOST: bridgeHostnameAndPort
-		]], bridgeDni))
+		]], "${selectedHue}"))
 }
 
 private verifyHueBridge(String deviceNetworkId) {
@@ -588,7 +943,7 @@ private verifyHueBridge(String deviceNetworkId) {
 		path: "/description.xml",
 		headers: [
 			HOST: ipAddressFromDni(deviceNetworkId)
-		]], deviceNetworkId))
+		]], "${selectedHue}"))
 }
 
 private verifyHueBridges() {
@@ -668,21 +1023,21 @@ Map scenesDiscovered() {
 }
 
 def getHueBulbs() {
-	log.debug state.bulbs
+
 	log.debug "HUE BULBS:"
-	state.bulbs = state.bulbs ?: [:]
+	state.bulbs = state.bulbs ?: [:]  	// discoverHueBulbs() //
 }
 
 def getHueGroups() {
-	log.debug state.groups
+
     log.debug "HUE GROUPS:"
-	state.groups = state.groups ?: [:]
+	state.groups = state.groups ?: [:]		// discoverHueGroups() // 
 }
 
 def getHueScenes() {
-	log.debug state.scenes
+
     log.debug "HUE SCENES:"
-	state.scenes = state.scenes ?: [:]
+	state.scenes = state.scenes ?: [:]		// discoverHueScenes()   //
 }
 
 def getHueBridges() {
@@ -1542,6 +1897,7 @@ def updateSceneFromDevice(childDevice) {
 	childDevice?.log "Path = ${path} "
 
 	put( path, value )
+    
 }
 
 def updateScene(body) {
@@ -1549,26 +1905,46 @@ def updateScene(body) {
 	def sceneID = body.sceneID
 
     String path = "scenes/${sceneID}/"
-	def value = [storelightstate: true]
+	def value = [lights: body.lights, storelightstate: true]
     
     if (body.name) {
     	value.name = body.name
-	}
-    if (body.lights) {
-    	value.lights = body.lights
 	}
     
 	log.trace "HLGS: updateScene:  Path = ${path} & body = ${value}"
 
 	put( path, value )
     
-
-	settings.modSceneConfirmed = null
-    settings.newSceneName = ""
-    settings.theLights = []
-	settings.modScene = null
+	app.updateSetting("modSceneConfirmed", null)
+	app.updateSetting("modSceneName", "")
+	app.updateSetting("modTheLights", [])
+	app.updateSetting("modScene", null)
     state.updateScene == null
+//    state.scenes = []
+
 }
+
+def renameScene(body) {
+	log.trace "HLGS: renameScene "
+	def sceneID = body.sceneID
+
+    String path = "scenes/${sceneID}/"
+	    
+    def value = body.name
+	
+    
+		log.trace "HLGS: renameScene:  Path = ${path} & body = ${value}"
+
+		put( path, value )
+    
+		app.updateSetting("renameSceneConfirmed", null)
+		app.updateSetting("renameSceneName", "")
+		app.updateSetting("renameScene", null)
+	    state.renameScene == null
+    
+//    state.scenes = []
+}
+
 
 
 def deleteScene(body) {
@@ -1591,6 +1967,11 @@ def deleteScene(body) {
 		]
     ],"${selectedHue}"))
 
+	app.updateSetting("remSceneConfirmed", null)
+	app.updateSetting("remScene", null)
+    state.deleteScene == null 
+//    state.scenes = []
+    
 }
 
 def createNewScene(body) {
@@ -1600,10 +1981,12 @@ def createNewScene(body) {
     String path = "scenes/"
 	def uri = "/api/${state.username}/$path"
 
-	def bodyJSON = new groovy.json.JsonBuilder(body).toString()
+	def newBody = [name: body.name, lights: body.lights]
+    
+	def bodyJSON = new groovy.json.JsonBuilder(newBody).toString()
 
 	log.trace "HLGS: createNewScene:  POST:  $uri"
-    log.trace "HLGS: createNewScene:  BODY: bodyJSON"
+    log.trace "HLGS: createNewScene:  BODY: $bodyJSON"
 
 
 	sendHubCommand(new physicalgraph.device.HubAction([
@@ -1612,8 +1995,116 @@ def createNewScene(body) {
 		headers: [
 			HOST: host
 		], body: bodyJSON],"${selectedHue}"))
+        
+	app.updateSetting("creSceneConfirmed", null)
+	app.updateSetting("creSceneName", "")
+	app.updateSetting("creTheLights", [])
+	app.updateSetting("creScene", null)
+    state.createScene == null 
+//  state.scenes = []
 
 }
+
+def updateGroup(body) {
+	log.trace "HLGS: updateGroup "
+	def groupID = body.groupID
+
+    String path = "groups/${groupID}/"
+	def value = [lights: body.lights]
+    
+    if (body.name) {
+    	value.name = body.name
+	}
+
+	log.trace "HLGS: updateGroup:  Path = ${path} & body = ${value}"
+
+	put( path, value )
+    
+	app.updateSetting("modGroupConfirmed", null)
+	app.updateSetting("modGroupName", "")
+	app.updateSetting("modTheLights", [])
+	app.updateSetting("modGroup", null)
+    state.updateGroup == null
+//    state.groups = []
+}
+
+def renameGroup(body) {
+	log.trace "HLGS: renameGroup "
+	def groupID = body.groupID
+
+    String path = "groups/${groupID}/"
+	def value = body.name
+	
+    
+		log.trace "HLGS: renameGroup:  Path = ${path} & body = ${value}"
+
+		put( path, value )
+    
+		app.updateSetting("renameGroupConfirmed", null)
+		app.updateSetting("renameGroupName", "")
+		app.updateSetting("renameGroup", null)
+	    state.renameGroup == null
+    
+//    state.groups = []
+}
+
+
+def deleteGroup(body) {
+	log.trace "HLGS: deleteGroup "
+	def host = getBridgeIP()
+
+
+	def groupID = body.groupID
+    String path = "groups/${groupID}/"
+	def uri = "/api/${state.username}/$path"
+
+	log.trace "HLGS: deleteGroup:  uri =  $uri"
+
+
+	sendHubCommand(new physicalgraph.device.HubAction([
+		method: "DELETE",
+		path: uri,
+		headers: [
+			HOST: host
+		]
+    ],"${selectedHue}"))
+
+	app.updateSetting("remGroupConfirmed", null)
+	app.updateSetting("remGroup", null)
+    state.deleteGroup == null        
+//    state.groups = []    
+}
+
+def createNewGroup(body) {
+	log.trace "HLGS: createNewGroup "
+	def host = getBridgeIP()
+
+    String path = "groups/"
+	def uri = "/api/${state.username}/$path"
+
+	body.type = "LightGroup"
+	def bodyJSON = new groovy.json.JsonBuilder(body).toString()
+
+	log.trace "HLGS: createNewGroup:  POST:  $uri"
+    log.trace "HLGS: createNewGroup:  BODY: $bodyJSON"
+
+
+	sendHubCommand(new physicalgraph.device.HubAction([
+		method: "POST",
+		path: uri,
+		headers: [
+			HOST: host
+		], body: bodyJSON],"${selectedHue}"))
+        
+	app.updateSetting("creGroupConfirmed", null)
+	app.updateSetting("creGroupName", "")
+	app.updateSetting("creTheLights", [])
+	app.updateSetting("creGroup", null)
+    state.createGroup == null        
+//    state.groups = []
+    
+}
+
 
 private poll() {
    def host = getBridgeIP()
@@ -1649,7 +2140,7 @@ private put(path, body) {
 	def bodyJSON = new groovy.json.JsonBuilder(body).toString()
 
 	childDevice?.log "PUT:  $uri"
-	childDevice?.log "BODY: bodyJSON"  // ${body} ?
+	childDevice?.log "BODY: $bodyJSON"  // ${body} ?
 
 
 	sendHubCommand(new physicalgraph.device.HubAction([
@@ -1844,6 +2335,44 @@ def ipAddressFromDni(dni) {
 def getSelectedTransition() {
 	return settings.selectedTransition
 }
+
+def setAlert(childDevice, effect, transitionTime, deviceType ) {
+	def api = "state" 
+    def dType = "lights"
+    def deviceID = getId(childDevice) 
+    if(deviceType == "groups") { 
+    	api = "action"
+        dType = deviceType
+        deviceID = deviceID - "g"
+    }
+   	def path = dType + "/" + deviceID + "/" + api
+
+
+	if(effect != "none" && effect != "select" && effect != "lselect") { childDevice?.log "Invalid alert value!" }
+    else {
+		def value = [alert: effect, transitiontime: transitionTime * 10 ]
+		childDevice?.log "setAlert: Alert ${effect}."
+		put( path, value )
+	}
+}
+
+def setEffect(childDevice, effect, transitionTime, deviceType) {
+	def api = "state" 
+    def dType = "lights"
+    def deviceID = getId(childDevice) 
+    if(deviceType == "groups") { 
+    	api = "action"
+        dType = deviceType
+        deviceID = deviceID - "g"
+    }
+   	def path = dType + "/" + deviceID + "/" + api
+
+
+	def value = [effect: effect, transitiontime: transitionTime * 10 ]
+	childDevice?.log "setEffect: Effect ${effect}."
+	put( path, value )
+}
+
 
 int kelvinToMireks(kelvin) {
 	return 1000000 / kelvin //https://en.wikipedia.org/wiki/Mired
