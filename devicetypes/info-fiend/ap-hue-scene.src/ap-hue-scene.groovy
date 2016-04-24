@@ -2,9 +2,7 @@
  *  AP Hue Scene
  *
  *	Version 1.3: Fixed getSceneID
- *		     Fixed updateScene
- * 
- * 	Version 1.4: Moved lights info to standard tile
+ *				 Fixed updateScene
  *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonnj)
  */
@@ -22,7 +20,7 @@ metadata {
         attribute "sceneID", "STRING"
         attribute "getSceneID", "STRING"
         attribute "updateScene", "STRING"
-	attribute "lights", "STRING"
+		attribute "lights", "STRING"
         attribute "group", "NUMBER"
 
 		command "setToGroup"
@@ -57,11 +55,11 @@ metadata {
 	       	state "sceneID", label: '${currentValue}  SceneID ', action:"getSceneID", backgroundColor:"#BDE5F2" //, nextState: "State2"
     	}
 
-	standardTile("updateScene", "device.updateScene", inactiveLabel: false, decoration: "flat", width: 3, height: 2) {
+		standardTile("updateScene", "device.updateScene", inactiveLabel: false, decoration: "flat", width: 3, height: 2) {
     	   	state "Ready", label: 'Update   Scene', action:"updateSceneFromDevice", backgroundColor:"#FBB215"
-	}
+	    }
 	
- 	valueTile("lights", "device.lights", inactiveLabel: false, decoration: "flat", width: 6, height: 2) {
+ 		valueTile("lights", "device.lights", inactiveLabel: false, decoration: "flat", width: 6, height: 2) {
 			state "default", label: 'Lights: ${currentValue}'
         }
         
@@ -91,13 +89,14 @@ def parse(description) {
 
 
 def on() {
-    push()
+    push()    
 }
 
 def push () {
 	def theGroup = device.currentValue("group") ?: 0
 	parent.setToGroup(this, theGroup) 
     sendEvent(name: "momentary", value: "pushed", isStateChange: true)
+    parent.poll()
 }
 
 def setToGroup ( Integer inGroupID ) {
@@ -105,6 +104,7 @@ def setToGroup ( Integer inGroupID ) {
 	def theGroup = device.currentValue("group") ?: 0
     parent.setToGroup(this, theGroup)  
     log.debug "Executing 'setToGroup' for ${device.label} using groupID ${theGroup}."
+    parent.poll()
     
 }
 
