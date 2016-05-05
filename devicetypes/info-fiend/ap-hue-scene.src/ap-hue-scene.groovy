@@ -22,6 +22,7 @@ metadata {
         attribute "updateScene", "STRING"
 		attribute "lights", "STRING"
         attribute "group", "NUMBER"
+//        attribute "inGroupID", "NUMBER"
 
 		command "setToGroup"
         command "updateScene"
@@ -101,9 +102,8 @@ def push () {
 
 def setToGroup ( Integer inGroupID ) {
 
-	def theGroup = device.currentValue("group") ?: 0
-    parent.setToGroup(this, theGroup)  
-    log.debug "Executing 'setToGroup' for ${device.label} using groupID ${theGroup}."
+    parent.setToGroup(this, inGroupID)  
+    log.debug "Executing 'setToGroup' for ${device.label} using groupID ${inGroupID}."
     parent.poll()
     
 }
