@@ -2,6 +2,7 @@
  *  AP Hue Bridge
  *
  *  Version 1.2 Added log 
+ *  Version 1.3 Conformed to new ST HUE BRIDGE code
  *
  *  Authors: Anthony Pastor (infofiend) and Clayton (claytonjn)
  */
@@ -19,9 +20,6 @@ metadata {
         
 	}
 
-	simulator {
-		// TODO: define status and reply messages here
-	}
 
 	tiles(scale: 2) {
      	multiAttributeTile(name:"rich-control"){
@@ -32,23 +30,23 @@ metadata {
 	            attributeState "default", label:'SN: ${currentValue}'
 			}
         }
-		standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat", height: 2, width: 6) {
-            state "default", label:"", action:"refresh.refresh", icon:"st.secondary.refresh"
-        }
-		valueTile("serialNumber", "device.serialNumber", decoration: "flat", height: 1, width: 3, inactiveLabel: false) {
+		
+		valueTile("serialNumber", "device.serialNumber", decoration: "flat", height: 1, width: 2, inactiveLabel: false) {
 			state "default", label:'SN: ${currentValue}'
 		}
-		valueTile("networkAddress", "device.networkAddress", decoration: "flat", height: 1, width: 3, inactiveLabel: false) {
+		valueTile("networkAddress", "device.networkAddress", decoration: "flat", height: 1, width: 2, inactiveLabel: false) {
 			state "default", label:'${currentValue}'
 		}
 
 		main (["rich-control"])
-		details(["rich-control", "networkAddress", "serialNumber", "refresh"])
+		details(["rich-control", "networkAddress" ]) // , "serialNumber", "refresh"])
 	}
 }
 
 // parse events into attributes
 def parse(description) {
+
+	log.debug "Parsing '${description}'"
 	def results = []
 	def result = parent.parse(this, description)
 
@@ -56,17 +54,18 @@ def parse(description) {
 		results << result
 	} else if (description == "updated") {
 		//do nothing
-		log.debug "Hue Bridge was updated"
+		log.debug "AP HUE BRIDGE was updated"
 	} else {
 		def map = description
 		if (description instanceof String)  {
 			map = stringToMap(description)
 		}
 		if (map?.name && map?.value) {
+        	log.trace "AP HUE BRIDGE, GENERATING EVENT: $map.name: $map.value"
 			results << createEvent(name: "${map?.name}", value: "${map?.value}")
 		}
 		else {
-			log.trace "HUE BRIDGE, OTHER"
+			log.trace "AP HUE BRIDGE, Parsing Description"
 			def msg = parseLanMessage(description)
 			if (msg.body) {
 				def contentType = msg.headers["Content-Type"]
@@ -81,23 +80,23 @@ def parse(description) {
                     }
 					//log.info "BULBS: $bulbs"
 					if (bgs.state) {
-						log.warn "NOT PROCESSED: $msg.body"
+						log.info "Bridge response: $msg.body"
 					}
 
 					else {
-						log.trace "HUE BRIDGE, GENERATING BULB LIST EVENT"
+						log.trace "AP HUE BRIDGE, GENERATING BULB LIST EVENT"
                         if(isScene)
                         {
-                        	log.trace "Sending Scene List: ${bgs}"
+                        	log.trace "Sending Scene List to Parent: ${bgs}"
 							sendEvent(name: "sceneList", value: device.hub.id, isStateChange: true, data: bgs)
                         } else if(isGroup)
                         {
-                        	log.trace "Sending Group List: ${bgs}"
+                        	log.trace "Sending Group List to Parent: ${bgs}"
 							sendEvent(name: "groupList", value: device.hub.id, isStateChange: true, data: bgs)
                         }
                         else
                         {
-                        	log.trace "Sending Bulb List: ${bgs}"
+                        	log.trace "Sending Bulb List to Parent: ${bgs}"
 							sendEvent(name: "bulbList", value: device.hub.id, isStateChange: true, data: bgs)
                         }
 					}
@@ -112,6 +111,7 @@ def parse(description) {
 	results
 }
 
+/**
 def poll() {
 	log.debug "Executing 'polling'"
 	parent.poll()
@@ -121,6 +121,9 @@ def refresh() {
 	log.debug "Executing 'refresh'"
 	parent.manualRefresh()
 }
+
+**/
+
 
 def log(message, level = "trace") {
 	switch (level) {
